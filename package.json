@@ -1,0 +1,11 @@
+{
+  "name": "electricity-bill-spike-analyzer",
+  "version": "1.0.0",
+  "description": "Browser tool that finds unusual spikes in electricity bills and suggests causes.",
+  "type": "module",
+  "scripts": {
+    "start": "npx serve .",
+    "test": "node --test"
+  },
+  "license": "MIT"
+}

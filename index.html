@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BillSpike: Tamil Nadu electricity bill analyzer</title>
+<meta name="description" content="Find out why your TNPDCL bi-monthly electricity bill spiked. Slab-accurate, runs in your browser.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=DM+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<main>
+  <nav class="topbar"><strong>BillSpike</strong><span class="badge">TNPDCL · LT-IA Domestic · bi-monthly billing</span></nav>
+  <header class="hero">
+    <div>
+      <h1>Why did my electricity bill spike?</h1>
+      <p class="lead">Enter your bi-monthly bills. BillSpike finds the unusual ones, checks each against the Tamil Nadu slab tariff, and shows when you crossed the 500-unit line. It runs in your browser; nothing is uploaded.</p>
+    </div>
+    <div class="meter" role="group" aria-label="Extra amount paid in spike bills">
+      <p class="meter-label">Extra paid in spike bills</p>
+      <div class="reading"><span class="rupee">₹</span><div class="drums" id="drums" aria-hidden="true"></div></div>
+      <p class="sr-only" id="meterText"></p>
+      <p class="meter-foot" id="meterSub">Waiting for your bills</p>
+    </div>
+  </header>
+  <section>
+    <h2>Your bills</h2>
+    <textarea id="input" aria-label="Bill data as CSV" spellcheck="false" placeholder="period,units,amount,days&#10;Jan–Feb,410,1700,59"></textarea>
+    <div class="row">
+      <button id="go">Analyze bills</button>
+      <label class="btn">Upload CSV<input type="file" id="file" accept=".csv,text/csv,text/plain"></label>
+      <button class="ghost" id="sample">Load sample data</button>
+      <label class="kw">Connected load (kW) <input type="number" id="kw" value="1" min="0.1" step="0.5"></label>
+    </div>
+    <p class="hint">One bill per line: <code>period,units,amount,days</code>. Amount in ₹; days is optional. Connected load sets the fixed charge.</p>
+    <p class="err" id="err" role="alert"></p>
+  </section>
+  <div id="out" hidden>
+    <section><p class="summary" id="summary"></p><p id="mode"></p><div class="chart" id="chart"></div></section>
+    <section><h2>Your bills against the tariff</h2><p class="hint">Each dot is one of your bills. The line is what the slab tariff charges for that many units.</p><div class="chart" id="curve"></div></section>
+    <section><h2>Bill by bill</h2><div class="scroll"><table id="table"></table></div></section>
+    <section><h2>What to check</h2><ul id="reasons"></ul></section>
+  </div>
+  <footer>Estimates use the domestic tariff effective 10 May 2026 as publicly reported (rates are in <code>js/tariff.js</code>). Taxes and arrears are not included. Confirm slab rates with TNERC or TNPDCL. Not affiliated with TNPDCL.</footer>
+</main>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
