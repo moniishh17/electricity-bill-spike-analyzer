@@ -36,6 +36,16 @@
     <p class="hint">One bill per line: <code>period,units,amount,days</code>. Amount in ₹; days is optional. Connected load sets the fixed charge.</p>
     <p class="err" id="err" role="alert"></p>
   </section>
+  <section>
+    <h2>Cliff Guard: this cycle</h2>
+    <p class="hint">Mid-cycle? Enter your meter units used so far and the days since the last reading to see if you are heading past 500 units.</p>
+    <div class="row">
+      <label class="kw">Units used so far <input type="number" id="used" min="0" step="1" placeholder="320"></label>
+      <label class="kw">Days elapsed (of 60) <input type="number" id="elapsed" min="1" max="60" step="1" placeholder="35"></label>
+      <button id="plan-go">Check my cycle</button>
+    </div>
+    <div id="plan" aria-live="polite"></div>
+  </section>
   <div id="out" hidden>
     <section><p class="summary" id="summary"></p><p id="mode"></p><div class="chart" id="chart"></div></section>
     <section><h2>Your bills against the tariff</h2><p class="hint">Each dot is one of your bills. The line is what the slab tariff charges for that many units.</p><div class="chart" id="curve"></div></section>
