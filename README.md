@@ -1,10 +1,13 @@
 # Electricity Bill Spike Analyzer
 
+[![tests](https://github.com/moniishh17/electricity-bill-spike-analyzer/actions/workflows/test.yml/badge.svg)](https://github.com/moniishh17/electricity-bill-spike-analyzer/actions/workflows/test.yml)
+
 Paste or upload your monthly electricity bills and find out which months were unusually high, how much extra they cost, and what to check. Runs fully in the browser with no backend, build step or dependencies.
 
 ## Features
 - **Tamil Nadu aware:** bi-monthly billing, telescopic LT-IA slabs, fixed charge by connected load, and the 500-unit cliff where the free allowance drops from 200 to 100 units
 - Structured bill entry: choose each bill's From and To month from dropdowns and the days are calculated automatically (leap years included, still editable); add/remove rows, validation that names the bill, plus CSV import
+- Your bills are saved in the browser between visits and can be exported to CSV
 - Bill audit: compares what you were billed with what the slab tariff predicts and flags large gaps
 - Robust spike detection (median and MAD) with per-day normalization for uneven billing periods
 - **Built as a guide:** a plain-language explainer (units, slabs, the 500-unit cliff, fixed charge, how to read a bill), a slab-by-slab bill calculator, and an appliance usage estimator for people new to electricity bills
@@ -21,7 +24,7 @@ Jan–Feb,410,1700,59
 Units per bi-monthly bill, amount in ₹, days optional. See `data/sample.csv`.
 
 ## Tariff data
-Slab rates live in `js/tariff.js` as plain configuration (effective 10 May 2026, as publicly reported). Verify them against the official TNERC/TNPDCL order and update the file if rates change. Taxes and arrears are not modelled.
+Tariffs live in `js/tariff.js` as a dated list: the 1 July 2024 order (100 free units, one ladder) and the 10 May 2026 scheme (200 free units at or below 500 bi-monthly units). Each bill is matched to the tariff in force for its period. Bills that start before the earliest known tariff, or span a tariff change, are marked "not audited" instead of being flagged. Estimates add the fixed charge and an indicative fuel surcharge (about 0.20 rupees per unit, revised quarterly by TNERC). Domestic bills are treated as exempt from electricity duty and arrears or late fees are not modelled; sources differ on these, so check against your bill. Rates come from public reports, not the official order.
 
 ## Run it
 ```
@@ -54,3 +57,6 @@ Parse bill PDFs, model state tariff slabs to explain cost per slab, compare the 
 
 ## Deploy
 GitHub repo → Settings → Pages → deploy from `main`.
+
+## License
+MIT, see `LICENSE`.

@@ -31,7 +31,7 @@
     <details><summary>Why does my bill come every two months?</summary><p>TNPDCL reads domestic meters about every two months, so each bill covers roughly 60 days. That is why this tool compares your bills per bi-monthly period and asks for the number of days.</p></details>
     <details><summary>What are slabs?</summary><p>Units are charged in bands. Only the units inside each band pay that band's rate, not the whole bill. For example, the first free units cost nothing, the next band costs ₹4.70 per unit, and so on. Use the calculator below to see this line by line.</p></details>
     <details><summary>What is the 500-unit cliff?</summary><p>As publicly reported for the scheme effective 10 May 2026, a bill of 500 units or less gets the first 200 units free. Above 500, only the first 100 are free and extra units fall in higher slabs (₹8.40 and up). So going from 500 to 501 units makes the bill jump, which is why a small rise in usage can look like a big spike.</p></details>
-    <details><summary>What are the fixed charge and connected load?</summary><p>Besides units, there is a small fixed charge per bill that depends on your connected (sanctioned) load in kW, which is printed on your bill. Enter it in the tools below; most homes are 1 to 3 kW.</p></details>
+    <details><summary>What are the fixed charge and connected load?</summary><p>Besides units, there is a small fixed charge per bill that depends on your connected (sanctioned) load in kW, which is printed on your bill, plus a fuel surcharge of roughly ₹0.20 per unit that TNERC revises every quarter. Enter it in the tools below; most homes are 1 to 3 kW.</p></details>
     <details><summary>How do I read my bill and meter?</summary><p>Find the previous and present meter readings on your bill. The difference is the units used. Check that the dates are about 60 days apart. If the reading looks wrong or marked as estimated, compare it with the number on your meter. Also look for arrears from earlier bills, since they raise the total without any extra usage.</p></details>
     <details><summary>How can I cut units quickly?</summary><p>Set the AC to 24 to 26 °C, switch off standby devices, use LED bulbs, run the geyser on a timer, and keep the fridge door seals and coils clean. Use the appliance estimator below to see which devices matter most.</p></details>
   </section>
@@ -44,6 +44,8 @@
       <button class="ghost" id="add" type="button">+ Add bill</button>
       <label class="btn">Import CSV<input type="file" id="file" accept=".csv,text/csv,text/plain"></label>
       <button class="ghost" id="sample">Load sample data</button>
+      <button class="ghost" id="export" type="button">Export CSV</button>
+      <button class="ghost" id="clear" type="button">Clear</button>
       <label class="kw">Connected load (kW) <input type="number" id="kw" value="1" min="0.1" step="0.5"></label>
     </div>
     <p class="hint">One row per bill (at least 4). Pick the From and To months and the days fill in automatically; you can edit them if your bill shows a different number. Units and amount are on the bill. The fixed charge uses your connected load.</p>
@@ -77,7 +79,7 @@
     <div class="row"><label class="kw">Appliance <select id="ap"></select></label><label class="kw">Hours per day <input type="number" id="ap-hours" min="0" max="24" step="0.5"></label></div>
     <div id="ap-out" aria-live="polite"></div>
   </section>
-  <footer>Estimates use the domestic tariff effective 10 May 2026 as publicly reported (rates are in <code>js/tariff.js</code>). Taxes and arrears are not included. Confirm slab rates with TNERC or TNPDCL. Not affiliated with TNPDCL.</footer>
+  <footer>Estimates use the domestic tariff effective 10 May 2026 as publicly reported (rates are in <code>js/tariff.js</code>). Estimates include an indicative fuel surcharge of about ₹0.20 per unit; arrears and late fees are not included. Confirm slab rates with TNERC or TNPDCL. Not affiliated with TNPDCL.</footer>
 </main>
 <script type="module" src="js/main.js"></script>
 </body>

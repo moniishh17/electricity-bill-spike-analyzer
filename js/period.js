@@ -27,3 +27,10 @@ export function parsePeriodLabel(label, defaultYear) {
   const fromY = m[2] ? +m[2] : m[4] ? (toM >= fromM ? +m[4] : +m[4] - 1) : defaultYear;
   return { fromM, fromY, toM };
 }
+
+/** First and last day of a period as YYYY-MM-DD. */
+export function periodDates(fromM, fromY, toM) {
+  const toY = resolveTo(fromM, fromY, toM);
+  const iso = (d) => d.toISOString().slice(0, 10);
+  return { start: iso(new Date(Date.UTC(fromY, fromM, 1))), end: iso(new Date(Date.UTC(toY, toM + 1, 0))) };
+}

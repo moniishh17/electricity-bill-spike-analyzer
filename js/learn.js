@@ -24,7 +24,8 @@ export function initLearn(kwInput) {
       el("tr", {}, ...["Units", "Count", "₹ per unit", "Amount"].map((t) => el("th", { textContent: t }))),
       ...b.rows.map((r) => row("", `${r.from} to ${r.to}`, r.units, r.rate === 0 ? "Free" : r.rate.toFixed(2), inr(r.cost))),
       row("", "Fixed charge", "", "", inr(b.fixed)),
-      row("total", "Total (before taxes and arrears)", "", "", inr(b.total)));
+      row("", `Fuel surcharge (about ₹${TARIFF.fsa.toFixed(2)} per unit)`, "", "", inr(b.fsa)),
+      row("total", "Total estimate (excludes arrears and late fees)", "", "", inr(b.total)));
     const kids = [note("", `${units} units is ${b.atOrBelowCliff ? "500 units or less" : "more than 500 units"}, so the first ${b.freeUnits} units are free.`), el("div", { className: "scroll" }, table)];
     if (units >= 400 && units <= TARIFF.cliff) {
       const jump = expectedBill(TARIFF.cliff + 1, kw) - b.total;

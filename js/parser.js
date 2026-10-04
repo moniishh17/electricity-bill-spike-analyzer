@@ -33,7 +33,7 @@ export function validateRows(raw) {
     if (!(units > 0)) return errors.push(`${label}: units must be above 0.`);
     if (v[2] === "" || !(amount >= 0)) return errors.push(`${label}: enter the billed amount.`);
     if (days !== null && !(days > 0)) return errors.push(`${label}: days must be above 0.`);
-    rows.push({ month: v[0], units, amount, days });
+    rows.push({ month: v[0], units, amount, days, start: r.start ?? null, end: r.end ?? null });
   });
   return { rows, errors };
 }
