@@ -53,3 +53,18 @@ svg text.flag{font-weight:700}
 footer{color:var(--mute);font-size:13px;max-width:70ch;margin-top:28px}
 code{font-family:"DM Mono",ui-monospace,monospace;font-size:.9em}
 @media(max-width:560px){.badge{display:none}}
+#plan p{margin:10px 0 0}#plan .warn{color:var(--spike);font-weight:600}
+html{scroll-behavior:smooth;scroll-padding-top:12px}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+.links{display:flex;flex-wrap:wrap;gap:4px 18px;font-size:15px}
+.links a{color:var(--ink);text-decoration:none;border-bottom:1.5px solid transparent}
+.links a:hover,.links a:focus-visible{border-color:var(--volt)}
+.eyebrow{color:var(--volt);font-weight:700;font-size:13px;letter-spacing:.06em;text-transform:uppercase;margin:0 0 14px}
+details{border-bottom:1px solid var(--line);padding:12px 0}
+details:last-of-type{border-bottom:0}
+summary{cursor:pointer;font-weight:700}
+details p{margin:8px 0 0;color:var(--mute);max-width:70ch}
+select{font:inherit;padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--paper);color:var(--ink)}
+#bd p,#ap-out p{margin:10px 0 0}#bd .warn{color:var(--spike);font-weight:600}
+tr.total td{font-weight:700;border-top:2px solid var(--ink)}
+@media(max-width:560px){.links a:nth-child(n+3){display:none}}
