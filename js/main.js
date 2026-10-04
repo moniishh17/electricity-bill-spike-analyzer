@@ -107,7 +107,7 @@ function addRow(d = {}) {
       h("label", {}, h("span", { textContent: "To" }), select("tm", monthOpts, p.toM, "To month"))),
     cell("units", "number", d.units, { placeholder: "Units", min: 0, step: 1 }),
     cell("amount", "number", d.amount, { placeholder: "₹ billed", min: 0, step: 1 }),
-    cell("days", "number", d.days, { placeholder: "Days (auto)", min: 1, step: 1, title: "Calculated from the months. Edit to override." }),
+    cell("days", "number", d.days, { placeholder: "Days", min: 1, step: 1, title: "Calculated from the months. Edit to override." }),
     h("button", { className: "ghost del", type: "button", textContent: "×", title: "Remove this bill", onclick: () => row.remove() }));
   row.addEventListener("change", (e) => {
     const k = e.target.dataset.f;
