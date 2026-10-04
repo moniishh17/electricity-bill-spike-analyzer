@@ -1,6 +1,7 @@
 import { parseCSV } from "./parser.js";
 import { analyze } from "./analysis.js";
 import { expectedBill, cliffReport } from "./tariff.js";
+import { initLearn } from "./learn.js";
 import { plan } from "./planner.js";
 import { explain } from "./insights.js";
 import { renderChart, renderCurve } from "./chart.js";
@@ -104,3 +105,4 @@ $("file").addEventListener("change", async (e) => {
 });
 buildDrums();
 setMeter(0, "Waiting for your bills");
+initLearn($("kw"));

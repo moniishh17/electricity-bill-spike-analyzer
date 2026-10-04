@@ -36,3 +36,17 @@ export function cliffReport(units, kw = 1) {
   if (units <= TARIFF.cliff) return null;
   return { over: units - TARIFF.cliff, extra: expectedBill(units, kw) - expectedBill(TARIFF.cliff, kw) };
 }
+
+/** Slab-by-slab calculation, for showing how a bill is built. */
+export function breakdown(units, kw = 1) {
+  const slabs = units <= TARIFF.cliff ? TARIFF.within : TARIFF.above;
+  const rows = [];
+  let prev = 0;
+  for (const [upper, rate] of slabs) {
+    if (units <= prev) break;
+    const n = Math.min(units, upper) - prev;
+    rows.push({ from: prev + 1, to: Math.min(units, upper), units: n, rate, cost: n * rate });
+    prev = upper;
+  }
+  return { rows, freeUnits: slabs[0][0], fixed: fixedCharge(kw), total: expectedBill(units, kw), atOrBelowCliff: units <= TARIFF.cliff };
+}
