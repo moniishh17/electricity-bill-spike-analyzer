@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en"> 
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -11,9 +11,10 @@
 </head>
 <body>
 <main>
-  <nav class="topbar"><strong>BillSpike</strong><span class="badge">TNPDCL · LT-IA Domestic · bi-monthly billing</span></nav>
+  <nav class="topbar"><strong>BillSpike</strong><span class="links"><a href="#guide">Guide</a><a href="#analyze">Analyze</a><a href="#planner">Cliff Guard</a><a href="#learn">Calculator</a></span></nav>
   <header class="hero">
     <div>
+      <p class="eyebrow">TNPDCL · LT-IA Domestic · bi-monthly billing</p>
       <h1>Why did my electricity bill spike?</h1>
       <p class="lead">Enter your bi-monthly bills. BillSpike finds the unusual ones, checks each against the Tamil Nadu slab tariff, and shows when you crossed the 500-unit line. It runs in your browser; nothing is uploaded.</p>
     </div>
@@ -24,7 +25,17 @@
       <p class="meter-foot" id="meterSub">Waiting for your bills</p>
     </div>
   </header>
-  <section>
+  <section id="guide">
+    <h2>New to electricity bills? Start here</h2>
+    <details open><summary>What is a "unit"?</summary><p>One unit is one kilowatt-hour (kWh): a 1,000-watt appliance running for one hour. A 75 W fan running 13 hours uses about one unit. Your bill is mostly the number of units you used times a rate per unit.</p></details>
+    <details><summary>Why does my bill come every two months?</summary><p>TNPDCL reads domestic meters about every two months, so each bill covers roughly 60 days. That is why this tool compares your bills per bi-monthly period and asks for the number of days.</p></details>
+    <details><summary>What are slabs?</summary><p>Units are charged in bands. Only the units inside each band pay that band's rate, not the whole bill. For example, the first free units cost nothing, the next band costs ₹4.70 per unit, and so on. Use the calculator below to see this line by line.</p></details>
+    <details><summary>What is the 500-unit cliff?</summary><p>As publicly reported for the scheme effective 10 May 2026, a bill of 500 units or less gets the first 200 units free. Above 500, only the first 100 are free and extra units fall in higher slabs (₹8.40 and up). So going from 500 to 501 units makes the bill jump, which is why a small rise in usage can look like a big spike.</p></details>
+    <details><summary>What are the fixed charge and connected load?</summary><p>Besides units, there is a small fixed charge per bill that depends on your connected (sanctioned) load in kW, which is printed on your bill. Enter it in the tools below; most homes are 1 to 3 kW.</p></details>
+    <details><summary>How do I read my bill and meter?</summary><p>Find the previous and present meter readings on your bill. The difference is the units used. Check that the dates are about 60 days apart. If the reading looks wrong or marked as estimated, compare it with the number on your meter. Also look for arrears from earlier bills, since they raise the total without any extra usage.</p></details>
+    <details><summary>How can I cut units quickly?</summary><p>Set the AC to 24 to 26 °C, switch off standby devices, use LED bulbs, run the geyser on a timer, and keep the fridge door seals and coils clean. Use the appliance estimator below to see which devices matter most.</p></details>
+  </section>
+  <section id="analyze">
     <h2>Your bills</h2>
     <textarea id="input" aria-label="Bill data as CSV" spellcheck="false" placeholder="period,units,amount,days&#10;Jan–Feb,410,1700,59"></textarea>
     <div class="row">
@@ -36,7 +47,7 @@
     <p class="hint">One bill per line: <code>period,units,amount,days</code>. Amount in ₹; days is optional. Connected load sets the fixed charge.</p>
     <p class="err" id="err" role="alert"></p>
   </section>
-  <section>
+  <section id="planner">
     <h2>Cliff Guard: this cycle</h2>
     <p class="hint">Mid-cycle? Enter your meter units used so far and the days since the last reading to see if you are heading past 500 units.</p>
     <div class="row">
@@ -52,8 +63,21 @@
     <section><h2>Bill by bill</h2><div class="scroll"><table id="table"></table></div></section>
     <section><h2>What to check</h2><ul id="reasons"></ul></section>
   </div>
+  <section id="learn">
+    <h2>See how a bill is calculated</h2>
+    <p class="hint">Type any number of units for a 60-day bill to see the charge slab by slab.</p>
+    <div class="row"><label class="kw">Units <input type="number" id="bd-units" min="0" step="1" placeholder="450"></label><button id="bd-go">Calculate</button></div>
+    <div id="bd" aria-live="polite"></div>
+  </section>
+  <section>
+    <h2>What do my appliances use?</h2>
+    <p class="hint">Typical wattages, so treat the result as an estimate.</p>
+    <div class="row"><label class="kw">Appliance <select id="ap"></select></label><label class="kw">Hours per day <input type="number" id="ap-hours" min="0" max="24" step="0.5"></label></div>
+    <div id="ap-out" aria-live="polite"></div>
+  </section>
   <footer>Estimates use the domestic tariff effective 10 May 2026 as publicly reported (rates are in <code>js/tariff.js</code>). Taxes and arrears are not included. Confirm slab rates with TNERC or TNPDCL. Not affiliated with TNPDCL.</footer>
 </main>
 <script type="module" src="js/main.js"></script>
 </body>
 </html>
+
