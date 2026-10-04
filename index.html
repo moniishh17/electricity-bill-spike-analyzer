@@ -3,83 +3,108 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>BillSpike: Tamil Nadu electricity bill analyzer</title>
-<meta name="description" content="Find out why your TNPDCL bi-monthly electricity bill spiked. Slab-accurate, runs in your browser.">
+<title>BillSpike: Tamil Nadu electricity bill analyzer · தமிழ்நாடு மின் கட்டண பகுப்பாய்வு</title>
+<meta name="description" content="Find out why your TNPDCL bi-monthly electricity bill spiked. Slab-accurate, in English and Tamil, runs in your browser.">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=DM+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=DM+Mono:wght@500&family=Noto+Sans+Tamil:wght@400..700&display=swap">
 <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
+<dialog id="lang-gate" aria-labelledby="gate-h">
+  <h2 id="gate-h">Choose your language<br>மொழியைத் தேர்ந்தெடுக்கவும்</h2>
+  <div class="row"><button class="lang-btn" data-lang="en" type="button">English</button><button class="lang-btn" data-lang="ta" type="button">தமிழ்</button></div>
+</dialog>
 <main>
-  <nav class="topbar"><strong>BillSpike</strong><span class="links"><a href="#guide">Guide</a><a href="#analyze">Analyze</a><a href="#planner">Cliff Guard</a><a href="#learn">Calculator</a></span></nav>
+  <nav class="topbar">
+    <strong>BillSpike</strong>
+    <span class="links"><a href="#guide" data-i18n="n.guide">Guide</a><a href="#analyze" data-i18n="n.analyze">Analyze</a><a href="#planner" data-i18n="n.guard">Cliff Guard</a><a href="#learn" data-i18n="n.calc">Calculator</a><a href="#tariff" data-i18n="n.tariff">Tariff</a><a href="#sources" data-i18n="n.sources">Sources</a></span>
+    <span class="lang" role="group" aria-label="Language"><button class="lang-btn ghost" data-lang="en" type="button" aria-pressed="true">EN</button><button class="lang-btn ghost" data-lang="ta" type="button" aria-pressed="false">தமிழ்</button></span>
+  </nav>
   <header class="hero">
     <div>
-      <p class="eyebrow">TNPDCL · LT-IA Domestic · bi-monthly billing</p>
-      <h1>Why did my electricity bill spike?</h1>
-      <p class="lead">Enter your bi-monthly bills. BillSpike finds the unusual ones, checks each against the Tamil Nadu slab tariff, and shows when you crossed the 500-unit line. It runs in your browser; nothing is uploaded.</p>
+      <p class="eyebrow" data-i18n="h.eyebrow">TNPDCL · Domestic · bi-monthly billing</p>
+      <h1 data-i18n="h.title">Why did my electricity bill spike?</h1>
+      <p class="lead" data-i18n="h.lead">Enter your bi-monthly bills. BillSpike finds the unusual ones, checks each against the Tamil Nadu slab tariff and shows when you crossed the 500-unit line. Everything runs in your browser; nothing is uploaded.</p>
     </div>
     <div class="meter" role="group" aria-label="Extra amount paid in spike bills">
-      <p class="meter-label">Extra paid in spike bills</p>
+      <p class="meter-label" data-i18n="m.label">Extra paid in spike bills</p>
       <div class="reading"><span class="rupee">₹</span><div class="drums" id="drums" aria-hidden="true"></div></div>
       <p class="sr-only" id="meterText"></p>
       <p class="meter-foot" id="meterSub">Waiting for your bills</p>
     </div>
   </header>
+  <div class="stats">
+    <div><b>200</b><span data-i18n="s.free">free units (500 or fewer)</span></div>
+    <div><b>₹4.70</b><span data-i18n="s.first">first paid rate per unit</span></div>
+    <div><b>₹11.55</b><span data-i18n="s.top">top rate per unit</span></div>
+    <div><b>2</b><span data-i18n="s.cycle">months per bill</span></div>
+  </div>
   <section id="guide">
-    <h2>New to electricity bills? Start here</h2>
-    <details open><summary>What is a "unit"?</summary><p>One unit is one kilowatt-hour (kWh): a 1,000-watt appliance running for one hour. A 75 W fan running 13 hours uses about one unit. Your bill is mostly the number of units you used times a rate per unit.</p></details>
-    <details><summary>Why does my bill come every two months?</summary><p>TNPDCL reads domestic meters about every two months, so each bill covers roughly 60 days. That is why this tool compares your bills per bi-monthly period and asks for the number of days.</p></details>
-    <details><summary>What are slabs?</summary><p>Units are charged in bands. Only the units inside each band pay that band's rate, not the whole bill. For example, the first free units cost nothing, the next band costs ₹4.70 per unit, and so on. Use the calculator below to see this line by line.</p></details>
-    <details><summary>What is the 500-unit cliff?</summary><p>As publicly reported for the scheme effective 10 May 2026, a bill of 500 units or less gets the first 200 units free. Above 500, only the first 100 are free and extra units fall in higher slabs (₹8.40 and up). So going from 500 to 501 units makes the bill jump, which is why a small rise in usage can look like a big spike.</p></details>
-    <details><summary>What are the fixed charge and connected load?</summary><p>Besides units, there is a small fixed charge per bill that depends on your connected (sanctioned) load in kW, which is printed on your bill, plus a fuel surcharge of roughly ₹0.20 per unit that TNERC revises every quarter. Enter it in the tools below; most homes are 1 to 3 kW.</p></details>
-    <details><summary>How do I read my bill and meter?</summary><p>Find the previous and present meter readings on your bill. The difference is the units used. Check that the dates are about 60 days apart. If the reading looks wrong or marked as estimated, compare it with the number on your meter. Also look for arrears from earlier bills, since they raise the total without any extra usage.</p></details>
-    <details><summary>How can I cut units quickly?</summary><p>Set the AC to 24 to 26 °C, switch off standby devices, use LED bulbs, run the geyser on a timer, and keep the fridge door seals and coils clean. Use the appliance estimator below to see which devices matter most.</p></details>
+    <h2 data-i18n="g.h">New to electricity bills? Start here</h2>
+    <details open><summary data-i18n="q1">What is a unit?</summary><p data-i18n="a1">One unit is one kilowatt-hour: a 1,000 W appliance running for an hour. Your bill is mostly units times a rate per unit.</p></details>
+    <details><summary data-i18n="q2">Why do bills come every two months?</summary><p data-i18n="a2">TNPDCL reads domestic meters about every two months, so each bill covers roughly 60 days.</p></details>
+    <details><summary data-i18n="q3">What are slabs?</summary><p data-i18n="a3">Units are charged in bands. Only the units inside a band pay that band's rate, not the whole bill.</p></details>
+    <details><summary data-i18n="q4">What is the 500-unit cliff?</summary><p data-i18n="a4">As publicly reported for the scheme from 10 May 2026: up to 500 units, the first 200 are free. Above 500, only 100 are free and extra units fall in ₹8.40+ slabs, so the bill jumps.</p></details>
+    <details><summary data-i18n="q5">What are the fixed charge and connected load?</summary><p data-i18n="a5">Each bill has a small fixed charge based on your connected load (kW, printed on the bill), plus a fuel surcharge of about ₹0.20 per unit that TNERC revises quarterly.</p></details>
+    <details><summary data-i18n="q6">How do I read my bill?</summary><p data-i18n="a6">Present reading minus previous reading is the units used. Check the dates are about 60 days apart and look for arrears from earlier bills.</p></details>
+    <details><summary data-i18n="q7">How can I cut units?</summary><p data-i18n="a7">Set the AC to 24–26 °C, switch off standby devices, use LEDs, run the geyser on a timer and use the estimator below to find the big users.</p></details>
   </section>
   <section id="analyze">
-    <h2>Your bills</h2>
-    <div class="bill-head" aria-hidden="true"><span>Period</span><span>Units</span><span>Billed (₹)</span><span>Days</span><span></span></div>
+    <h2 data-i18n="a.h">Your bills</h2>
+    <div class="bill-head" aria-hidden="true"><span data-i18n="th.period">Period</span><span data-i18n="th.units">Units</span><span data-i18n="th.billedr">Billed (₹)</span><span data-i18n="th.days">Days</span><span></span></div>
     <div id="bills"></div>
     <div class="row">
-      <button id="go">Analyze bills</button>
-      <button class="ghost" id="add" type="button">+ Add bill</button>
-      <label class="btn">Import CSV<input type="file" id="file" accept=".csv,text/csv,text/plain"></label>
-      <button class="ghost" id="sample">Load sample data</button>
-      <button class="ghost" id="export" type="button">Export CSV</button>
-      <button class="ghost" id="clear" type="button">Clear</button>
-      <label class="kw">Connected load (kW) <input type="number" id="kw" value="1" min="0.1" step="0.5"></label>
+      <button id="go" data-i18n="b.analyze">Analyze bills</button>
+      <button class="ghost" id="add" type="button" data-i18n="b.add">+ Add bill</button>
+      <label class="btn"><span data-i18n="b.import">Import CSV</span><input type="file" id="file" accept=".csv,text/csv,text/plain"></label>
+      <button class="ghost" id="sample" data-i18n="b.sample">Load sample data</button>
+      <button class="ghost" id="export" type="button" data-i18n="b.export">Export CSV</button>
+      <button class="ghost" id="clear" type="button" data-i18n="b.clear">Clear</button>
+      <label class="kw"><span data-i18n="kw">Connected load (kW)</span> <input type="number" id="kw" value="1" min="0.1" step="0.5"></label>
     </div>
-    <p class="hint">One row per bill (at least 4). Pick the From and To months and the days fill in automatically; you can edit them if your bill shows a different number. Units and amount are on the bill. The fixed charge uses your connected load.</p>
+    <p class="hint" data-i18n="a.hint">One row per bill (at least 4). Pick the From and To months; days fill in automatically and you can edit them.</p>
     <p class="err" id="err" role="alert"></p>
   </section>
   <section id="planner">
-    <h2>Cliff Guard: this cycle</h2>
-    <p class="hint">Mid-cycle? Enter your meter units used so far and the days since the last reading to see if you are heading past 500 units.</p>
+    <h2 data-i18n="gd.h">Cliff Guard: this cycle</h2>
+    <p class="hint" data-i18n="gd.hint">Mid-cycle? Enter the units used so far and the days since the last reading.</p>
     <div class="row">
-      <label class="kw">Units used so far <input type="number" id="used" min="0" step="1" placeholder="320"></label>
-      <label class="kw">Days elapsed (of 60) <input type="number" id="elapsed" min="1" max="60" step="1" placeholder="35"></label>
-      <button id="plan-go">Check my cycle</button>
+      <label class="kw"><span data-i18n="gd.used">Units used so far</span> <input type="number" id="used" min="0" step="1" placeholder="320"></label>
+      <label class="kw"><span data-i18n="gd.days">Days elapsed (of 60)</span> <input type="number" id="elapsed" min="1" max="60" step="1" placeholder="35"></label>
+      <button id="plan-go" data-i18n="gd.go">Check my cycle</button>
     </div>
     <div id="plan" aria-live="polite"></div>
   </section>
   <div id="out" hidden>
     <section><p class="summary" id="summary"></p><p id="mode"></p><div class="chart" id="chart"></div></section>
-    <section><h2>Your bills against the tariff</h2><p class="hint">Each dot is one of your bills. The line is what the slab tariff charges for that many units.</p><div class="chart" id="curve"></div></section>
-    <section><h2>Bill by bill</h2><div class="scroll"><table id="table"></table></div></section>
-    <section><h2>What to check</h2><ul id="reasons"></ul></section>
+    <section><h2 data-i18n="r.curve.h">Your bills against the tariff</h2><p class="hint" data-i18n="r.curve.hint">Each dot is one of your bills. The line is what the tariff charges for that many units.</p><div class="chart" id="curve"></div></section>
+    <section><h2 data-i18n="r.table.h">Bill by bill</h2><div class="scroll"><table id="table"></table></div></section>
+    <section><h2 data-i18n="r.what.h">What to check</h2><ul id="reasons"></ul></section>
   </div>
   <section id="learn">
-    <h2>See how a bill is calculated</h2>
-    <p class="hint">Type any number of units for a 60-day bill to see the charge slab by slab.</p>
-    <div class="row"><label class="kw">Units <input type="number" id="bd-units" min="0" step="1" placeholder="450"></label><button id="bd-go">Calculate</button></div>
+    <h2 data-i18n="c.h">See how a bill is calculated</h2>
+    <p class="hint" data-i18n="c.hint">Type the units for a 60-day bill to see the charge slab by slab.</p>
+    <div class="row"><label class="kw"><span data-i18n="th.units">Units</span> <input type="number" id="bd-units" min="0" step="1" placeholder="450"></label><button id="bd-go" data-i18n="c.go">Calculate</button></div>
     <div id="bd" aria-live="polite"></div>
   </section>
   <section>
-    <h2>What do my appliances use?</h2>
-    <p class="hint">Typical wattages, so treat the result as an estimate.</p>
-    <div class="row"><label class="kw">Appliance <select id="ap"></select></label><label class="kw">Hours per day <input type="number" id="ap-hours" min="0" max="24" step="0.5"></label></div>
+    <h2 data-i18n="ap.h">What do my appliances use?</h2>
+    <p class="hint" data-i18n="ap.hint">Typical wattages, so treat the result as an estimate.</p>
+    <div class="row"><label class="kw"><span data-i18n="ap.sel">Appliance</span> <select id="ap"></select></label><label class="kw"><span data-i18n="ap.hours">Hours per day</span> <input type="number" id="ap-hours" min="0" max="24" step="0.5"></label></div>
     <div id="ap-out" aria-live="polite"></div>
   </section>
-  <footer>Estimates use the domestic tariff effective 10 May 2026 as publicly reported (rates are in <code>js/tariff.js</code>). Estimates include an indicative fuel surcharge of about ₹0.20 per unit; arrears and late fees are not included. Confirm slab rates with TNERC or TNPDCL. Not affiliated with TNPDCL.</footer>
+  <section id="tariff">
+    <h2 data-i18n="t.h">Tariff reference</h2>
+    <p class="hint" data-i18n="t.hint">Domestic (LT-IA), per bi-monthly bill. Rates from public reports; effective 10 May 2026.</p>
+    <div class="ref" id="ref"></div>
+    <p class="hint" data-i18n="t.fixed">Fixed charge: ₹30 up to 500 W, ₹45 up to 1 kW, +₹30 per extra kW per bill. Fuel surcharge about ₹0.20 per unit.</p>
+  </section>
+  <section id="sources">
+    <h2 data-i18n="so.h">Sources and accuracy</h2>
+    <p data-i18n="so.p1">Rates follow TNERC Tariff Order No. 6 of 2024 and the May 2026 free-units scheme, as reported by public calculators and news. They have not been checked against the official order. Last reviewed 4 October 2026.</p>
+    <p data-i18n="so.p2">Estimates exclude arrears and late fees. For disputes call the TNPDCL helpline 1912. This is an independent project, not affiliated with TNPDCL.</p>
+  </section>
+  <footer data-i18n="f.p">BillSpike · Open source · runs in your browser</footer>
 </main>
 <script type="module" src="js/main.js"></script>
 </body>

@@ -80,3 +80,24 @@ tr.total td{font-weight:700;border-top:2px solid var(--ink)}
 .period label span{width:30px;flex:none}
 .period select{flex:1;min-width:0;font:inherit;font-size:14px;padding:7px 6px;border-radius:8px;border:1px solid var(--line);background:var(--paper);color:var(--ink)}
 @media(max-width:560px){.bill-head{display:none}.bill-row{grid-template-columns:1fr 1fr 1fr 32px;border:1px solid var(--line);border-radius:10px;padding:10px}.period{grid-column:1/-1}}
+body{font-family:"Archivo","Noto Sans Tamil",system-ui,-apple-system,"Segoe UI",sans-serif}
+:lang(ta) body{line-height:1.8}
+:lang(ta) h1{font-stretch:100%;line-height:1.25;font-size:clamp(28px,5vw,46px)}
+.lang{display:flex;gap:6px}
+.lang button{padding:5px 12px;font-size:14px}
+.lang button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+dialog{border:1px solid var(--line);border-radius:14px;background:var(--panel);color:var(--ink);padding:28px;max-width:420px;text-align:center}
+dialog::backdrop{background:#000a}
+dialog h2{margin:0 0 18px;font-size:20px;line-height:1.5}
+dialog .row{justify-content:center}
+dialog button{min-width:130px;font-size:18px}
+dialog button.lang-btn{background:var(--volt);border-color:var(--volt);color:var(--volt-ink)}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:20px}
+.stats div{background:var(--panel);padding:16px;display:flex;flex-direction:column;gap:2px}
+.stats b{font-size:clamp(24px,4vw,34px);font-weight:800;letter-spacing:-.02em}
+.stats span{font-size:13px;color:var(--mute)}
+.ref{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.ref h3{font-size:15px;margin:0 0 8px}
+.period label span{width:auto;min-width:46px}
+#sources p{color:var(--mute);max-width:75ch}
+@media(max-width:700px){.stats{grid-template-columns:1fr 1fr}.ref{grid-template-columns:1fr}}

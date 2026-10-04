@@ -6,6 +6,7 @@ import { initLearn } from "./learn.js";
 import { plan } from "./planner.js";
 import { explain } from "./insights.js";
 import { renderChart, renderCurve } from "./chart.js";
+import { t, initLang } from "./i18n.js";
 
 const $ = (id) => document.getElementById(id);
 const inr = (n) => "₹" + Math.round(n).toLocaleString("en-IN");
@@ -41,29 +42,28 @@ function enrich(result, kw) {
 }
 
 function renderTable(result) {
-  const cols = ["Period", "Units", "Usage vs usual", "Billed", "Tariff says", "Gap"];
+  const cols = [t("th.period"), t("th.units"), t("th.vs"), t("th.billed"), t("th.tariff"), t("th.gap")];
   const rows = result.bills.map((b) =>
     h("tr", { className: b.spike ? "spike" : "" },
-      h("td", {}, b.month, ...(b.spike ? [h("span", { className: "tag", textContent: "spike" })] : []), ...(b.cliff ? [h("span", { className: "tag", textContent: ">500" })] : [])),
+      h("td", {}, b.month, ...(b.spike ? [h("span", { className: "tag", textContent: t("tag.spike") })] : []), ...(b.cliff ? [h("span", { className: "tag", textContent: ">500" })] : [])),
       h("td", { textContent: b.units }),
       h("td", { textContent: `${b.pct >= 0 ? "+" : ""}${Math.round(b.pct)}%` }),
       h("td", { textContent: inr(b.amount) }),
       h("td", { textContent: b.expected == null ? "—" : inr(b.expected) }),
       h("td", { className: b.audit ? "gap" : "", textContent: b.gap == null ? "—" : `${b.gap >= 0 ? "+" : "-"}${inr(Math.abs(b.gap))}` })));
-  $("table").replaceChildren(h("tr", {}, ...cols.map((t) => h("th", { textContent: t }))), ...rows);
+  $("table").replaceChildren(h("tr", {}, ...cols.map((c) => h("th", { textContent: c }))), ...rows);
 }
 
 function render(result, kw) {
   const spikes = result.bills.filter((b) => b.spike);
-  $("summary").textContent = spikes.length
-    ? `${spikes.length} spike${spikes.length > 1 ? "s" : ""} found (${spikes.map((b) => b.month).join(", ")}), costing about ${inr(result.extraCost)} more than normal.`
-    : "No unusual spikes. Your usage stays close to your normal level.";
-  $("mode").textContent = result.perDay ? "Compared per day, so billing length doesn't skew results." : "Compared by total units. Add a days column to compare per day.";
-  setMeter(result.extraCost, spikes.length ? `${spikes.length} spike bill${spikes.length > 1 ? "s" : ""}: ${spikes.map((b) => b.month).join(", ")}` : "No spike bills found");
+  const names = spikes.map((b) => b.month).join(", ");
+  $("summary").textContent = spikes.length ? t("sum.spikes", { n: spikes.length, names, amt: inr(result.extraCost) }) : t("sum.none");
+  $("mode").textContent = t(result.perDay ? "mode.day" : "mode.total");
+  setMeter(result.extraCost, spikes.length ? t("meter.spikes", { n: spikes.length, names }) : t("meter.none"));
   renderChart($("chart"), result);
   renderCurve($("curve"), result.bills, kw);
   renderTable(result);
-  $("reasons").replaceChildren(...explain(result).map(([t, d]) => h("li", {}, h("strong", { textContent: t + ": " }), d)));
+  $("reasons").replaceChildren(...explain(result).map(([title, d]) => h("li", {}, h("strong", { textContent: title + ": " }), d)));
   $("out").hidden = false;
 }
 
@@ -83,6 +83,7 @@ const select = (key, opts, value, label) => {
 const cell = (key, type, val, extra) => {
   const i = h("input", { type, value: val ?? "", ...extra });
   i.dataset.f = key;
+  i.dataset.i18nPh = "ph." + key;
   i.setAttribute("aria-label", key);
   return i;
 };
@@ -93,6 +94,7 @@ const autoDays = (row) => {
   delete row.dataset.label;
 };
 
+const tr = (tag, key) => { const n = h(tag, { textContent: t(key) }); n.dataset.i18n = key; return n; };
 function addRow(d = {}) {
   let p = d.period;
   if (!p) { // continue from the previous bill's period
@@ -105,11 +107,11 @@ function addRow(d = {}) {
   }
   const row = h("div", { className: "bill-row" },
     h("div", { className: "period" },
-      h("label", {}, h("span", { textContent: "From" }), select("fm", monthOpts, p.fromM, "From month"), select("fy", yearOpts, p.fromY, "From year")),
-      h("label", {}, h("span", { textContent: "To" }), select("tm", monthOpts, p.toM, "To month"))),
-    cell("units", "number", d.units, { placeholder: "Units", min: 0, step: 1 }),
-    cell("amount", "number", d.amount, { placeholder: "₹ billed", min: 0, step: 1 }),
-    cell("days", "number", d.days, { placeholder: "Days", min: 1, step: 1, title: "Calculated from the months. Edit to override." }),
+      h("label", {}, tr("span", "f.from"), select("fm", monthOpts, p.fromM, "From month"), select("fy", yearOpts, p.fromY, "From year")),
+      h("label", {}, tr("span", "f.to"), select("tm", monthOpts, p.toM, "To month"))),
+    cell("units", "number", d.units, { placeholder: t("ph.units"), min: 0, step: 1 }),
+    cell("amount", "number", d.amount, { placeholder: t("ph.amount"), min: 0, step: 1 }),
+    cell("days", "number", d.days, { placeholder: t("ph.days"), min: 1, step: 1, title: "Calculated from the months. Edit to override." }),
     h("button", { className: "ghost del", type: "button", textContent: "×", title: "Remove this bill", onclick: () => { row.remove(); save(); } }));
   row.addEventListener("change", (e) => {
     const k = e.target.dataset.f;
@@ -160,7 +162,7 @@ function run() {
     render(enrich(analyze(rows), kw), kw);
   } catch (e) {
     $("out").hidden = true;
-    setMeter(0, "Waiting for your bills");
+    setMeter(0, t("meter.wait"));
     $("err").textContent = [...errors, e.message].join(" ");
   }
 }
@@ -170,11 +172,11 @@ function runPlanner() {
   const box = $("plan");
   try {
     const p = plan({ used: Number($("used").value), elapsed: Number($("elapsed").value), kw });
-    const lines = [`At ${p.rate.toFixed(1)} units/day you are on track for about ${p.projected} units this cycle, a bill of roughly ${inr(p.bill)}.`];
-    if (p.alreadyOver) lines.push("You are already past 500 units, so this bill falls in the higher slabs and only 100 units are free.");
-    else if (p.crosses) lines.push(`That crosses the 500-unit line and costs about ${inr(p.extra)} more than staying at 500. Keep the remaining ${p.left} days to ${p.budget.toFixed(1)} units/day (${p.cutPerDay.toFixed(1)} less per day than now) to stay under.`);
-    else lines.push(p.left > 0 ? `You are under the line. You can use up to ${p.budget.toFixed(1)} units/day for the remaining ${p.left} days and still stay below 500.` : "Cycle complete and under the 500-unit line.");
-    box.replaceChildren(...lines.map((t, i) => h("p", { className: i && p.crosses ? "warn" : "", textContent: t })));
+    const lines = [t("p.track", { r: p.rate.toFixed(1), p: p.projected, b: inr(p.bill) })];
+    if (p.alreadyOver) lines.push(t("p.over"));
+    else if (p.crosses) lines.push(t("p.cross", { x: inr(p.extra), d: p.left, u: p.budget.toFixed(1), c: p.cutPerDay.toFixed(1) }));
+    else lines.push(p.left > 0 ? t("p.safe", { u: p.budget.toFixed(1), d: p.left }) : t("p.done"));
+    box.replaceChildren(...lines.map((line, i) => h("p", { className: i && p.crosses ? "warn" : "", textContent: line })));
   } catch (e) {
     box.replaceChildren(h("p", { className: "err", textContent: e.message }));
   }
@@ -216,5 +218,12 @@ $("file").addEventListener("change", async (e) => {
 });
 if (!restore()) for (let i = 0; i < 4; i++) addRow();
 buildDrums();
-setMeter(0, "Waiting for your bills");
-initLearn($("kw"));
+initLang();
+setMeter(0, t("meter.wait"));
+const refreshLearn = initLearn($("kw"));
+refreshLearn();
+document.addEventListener("langchange", () => {
+  if ($("out").hidden) setMeter(0, t("meter.wait")); else run();
+  if ($("plan").children.length) runPlanner();
+  refreshLearn();
+});

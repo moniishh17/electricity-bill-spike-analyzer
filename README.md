@@ -10,6 +10,7 @@ Paste or upload your monthly electricity bills and find out which months were un
 - Your bills are saved in the browser between visits and can be exported to CSV
 - Bill audit: compares what you were billed with what the slab tariff predicts and flags large gaps
 - Robust spike detection (median and MAD) with per-day normalization for uneven billing periods
+- **English and Tamil:** the whole page, including results, charts and planner, switches language; a first-visit prompt asks the user to choose. A test fails if any text is missing its Tamil translation
 - **Built as a guide:** a plain-language explainer (units, slabs, the 500-unit cliff, fixed charge, how to read a bill), a slab-by-slab bill calculator, and an appliance usage estimator for people new to electricity bills
 - **Cliff Guard:** mid-cycle planner that projects your bill and gives a daily unit budget to stay under 500 units
 - Tariff curve chart: your bills plotted against the cost curve, with the cliff marked
@@ -40,6 +41,8 @@ js/parser.js        CSV -> rows + errors
 js/analysis.js      statistics (pure functions)
 js/tariff.js        TN slab tariff, fixed charge, 500-unit cliff
 js/learn.js         bill calculator and appliance estimator
+js/i18n.js          language switching (English text from the page, Tamil from lang-ta.js)
+js/lang-ta.js       Tamil translations
 js/period.js        month labels and day counts for a billing period
 js/planner.js       Cliff Guard cycle projection
 js/insights.js      analysis -> plain-language causes

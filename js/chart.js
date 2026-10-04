@@ -1,5 +1,6 @@
 /** SVG charts built with DOM calls only (no innerHTML, so user text is safe). */
 import { expectedBill, TARIFF } from "./tariff.js";
+import { t } from "./i18n.js";
 
 const NS = "http://www.w3.org/2000/svg";
 const svgEl = (tag, attrs = {}, text) => {
@@ -38,7 +39,7 @@ export function renderChart(host, { bills, baseline, unit }) {
   svg.append(
     svgEl("line", { x1: p.l, x2: W - p.r, y1: y(baseline), y2: y(baseline), stroke: "var(--ok)", "stroke-width": 2, "stroke-dasharray": "6 4" }),
     svgEl("line", { x1: p.l, x2: p.l + 24, y1: 14, y2: 14, stroke: "var(--ok)", "stroke-width": 2, "stroke-dasharray": "6 4" }),
-    svgEl("text", { x: p.l + 32, y: 18 }, `your usual: ${baseline.toFixed(dp)} ${unit}`),
+    svgEl("text", { x: p.l + 32, y: 18 }, t("c.usual", { v: baseline.toFixed(dp), u: unit })),
   );
   host.replaceChildren(svg);
 }
@@ -61,8 +62,8 @@ export function renderCurve(host, bills, kw) {
   for (const u of [0, 200, 400, 600, 800]) svg.append(svgEl("text", { x: x(u), y: H - 10, "text-anchor": "middle" }, u));
   svg.append(
     svgEl("line", { x1: x(TARIFF.cliff), x2: x(TARIFF.cliff), y1: p.t, y2: H - p.b, stroke: "var(--spike)", "stroke-dasharray": "4 4" }),
-    svgEl("text", { x: x(TARIFF.cliff) - 6, y: p.t + 10, "text-anchor": "end", class: "flag" }, "500-unit cliff"),
-    svgEl("text", { x: W - p.r, y: H - 10, "text-anchor": "end" }, "units per bill"),
+    svgEl("text", { x: x(TARIFF.cliff) - 6, y: p.t + 10, "text-anchor": "end", class: "flag" }, t("c.cliff")),
+    svgEl("text", { x: W - p.r, y: H - 10, "text-anchor": "end" }, t("c.units")),
   );
   for (const b of bills) {
     const dot = svgEl("circle", { cx: x(b.units), cy: y(b.amount), r: 5.5, fill: b.cliff ? "var(--spike)" : "var(--volt)", stroke: "var(--panel)", "stroke-width": 2 });
