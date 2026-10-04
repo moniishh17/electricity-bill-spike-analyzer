@@ -1,4 +1,5 @@
-import { parseCSV } from "./parser.js";
+import { MONTHS, resolveTo, periodDays, periodLabel, parsePeriodLabel } from "./period.js";
+import { parseCSV, validateRows } from "./parser.js";
 import { analyze } from "./analysis.js";
 import { expectedBill, cliffReport } from "./tariff.js";
 import { initLearn } from "./learn.js";
@@ -64,9 +65,74 @@ function render(result, kw) {
   $("out").hidden = false;
 }
 
+const list = $("bills");
+const thisYear = new Date().getFullYear();
+const monthOpts = MONTHS.map((t, i) => [i, t]);
+const yearOpts = Array.from({ length: 8 }, (_, i) => [thisYear - 6 + i, thisYear - 6 + i]);
+const q = (row, k) => row.querySelector(`[data-f="${k}"]`);
+
+const select = (key, opts, value, label) => {
+  const s = h("select", {}, ...opts.map(([v, t]) => h("option", { value: v, textContent: t })));
+  s.value = String(value);
+  s.dataset.f = key;
+  s.setAttribute("aria-label", label);
+  return s;
+};
+const cell = (key, type, val, extra) => {
+  const i = h("input", { type, value: val ?? "", ...extra });
+  i.dataset.f = key;
+  i.setAttribute("aria-label", key);
+  return i;
+};
+const rowPeriod = (row) => ({ fromM: +q(row, "fm").value, fromY: +q(row, "fy").value, toM: +q(row, "tm").value });
+const autoDays = (row) => {
+  const p = rowPeriod(row);
+  q(row, "days").value = periodDays(p.fromM, p.fromY, p.toM);
+  delete row.dataset.label;
+};
+
+function addRow(d = {}) {
+  let p = d.period;
+  if (!p) { // continue from the previous bill's period
+    const last = list.lastElementChild;
+    if (last) {
+      const x = rowPeriod(last);
+      const fromM = (x.toM + 1) % 12;
+      p = { fromM, fromY: x.toM === 11 ? resolveTo(x.fromM, x.fromY, x.toM) + 1 : resolveTo(x.fromM, x.fromY, x.toM), toM: (fromM + 1) % 12 };
+    } else p = { fromM: 0, fromY: thisYear - 1, toM: 1 };
+  }
+  const row = h("div", { className: "bill-row" },
+    h("div", { className: "period" },
+      h("label", {}, h("span", { textContent: "From" }), select("fm", monthOpts, p.fromM, "From month"), select("fy", yearOpts, p.fromY, "From year")),
+      h("label", {}, h("span", { textContent: "To" }), select("tm", monthOpts, p.toM, "To month"))),
+    cell("units", "number", d.units, { placeholder: "Units", min: 0, step: 1 }),
+    cell("amount", "number", d.amount, { placeholder: "₹ billed", min: 0, step: 1 }),
+    cell("days", "number", d.days, { placeholder: "Days (auto)", min: 1, step: 1, title: "Calculated from the months. Edit to override." }),
+    h("button", { className: "ghost del", type: "button", textContent: "×", title: "Remove this bill", onclick: () => row.remove() }));
+  row.addEventListener("change", (e) => {
+    const k = e.target.dataset.f;
+    if (k === "fm") q(row, "tm").value = (+e.target.value + 1) % 12; // a bill covers two months by default
+    if (["fm", "fy", "tm"].includes(k)) autoDays(row);
+  });
+  list.append(row);
+  if (d.label) row.dataset.label = d.label; // a custom label from an imported file
+  else if (d.days == null) autoDays(row);
+}
+const setRows = (rows) => {
+  list.replaceChildren();
+  rows.forEach((r) => {
+    const period = parsePeriodLabel(r.month, thisYear - 1);
+    addRow({ period, label: period ? null : r.month, units: r.units, amount: r.amount, days: r.days });
+  });
+};
+const readRows = () => [...list.children].map((r) => ({
+  month: r.dataset.label || (({ fromM, fromY, toM }) => periodLabel(fromM, fromY, toM))(rowPeriod(r)),
+  units: q(r, "units").value, amount: q(r, "amount").value, days: q(r, "days").value,
+}));
+
 function run() {
   const kw = Math.max(0.1, parseFloat($("kw").value) || 1);
-  const { rows, errors } = parseCSV($("input").value);
+  const { rows, errors } = validateRows(readRows());
   $("err").textContent = errors.join(" ");
   try {
     render(enrich(analyze(rows), kw), kw);
@@ -94,15 +160,22 @@ function runPlanner() {
 
 $("plan-go").addEventListener("click", runPlanner);
 $("go").addEventListener("click", run);
-$("kw").addEventListener("change", () => $("input").value.trim() && run());
+$("kw").addEventListener("change", () => validateRows(readRows()).rows.length >= 4 && run());
+$("add").addEventListener("click", () => { addRow(); list.lastChild.querySelector("input").focus(); });
 $("sample").addEventListener("click", async () => {
-  $("input").value = await (await fetch("data/sample.csv")).text();
+  setRows(parseCSV(await (await fetch("data/sample.csv")).text()).rows);
   run();
 });
 $("file").addEventListener("change", async (e) => {
   const f = e.target.files[0];
-  if (f) { $("input").value = await f.text(); run(); }
+  if (!f) return;
+  const { rows, errors } = parseCSV(await f.text());
+  setRows(rows);
+  if (errors.length) $("err").textContent = errors.join(" ");
+  else run();
+  e.target.value = "";
 });
+for (let i = 0; i < 4; i++) addRow();
 buildDrums();
 setMeter(0, "Waiting for your bills");
 initLearn($("kw"));

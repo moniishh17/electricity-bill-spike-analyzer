@@ -37,14 +37,16 @@
   </section>
   <section id="analyze">
     <h2>Your bills</h2>
-    <textarea id="input" aria-label="Bill data as CSV" spellcheck="false" placeholder="period,units,amount,days&#10;Jan–Feb,410,1700,59"></textarea>
+    <div class="bill-head" aria-hidden="true"><span>Period</span><span>Units</span><span>Billed (₹)</span><span>Days (auto)</span><span></span></div>
+    <div id="bills"></div>
     <div class="row">
       <button id="go">Analyze bills</button>
-      <label class="btn">Upload CSV<input type="file" id="file" accept=".csv,text/csv,text/plain"></label>
+      <button class="ghost" id="add" type="button">+ Add bill</button>
+      <label class="btn">Import CSV<input type="file" id="file" accept=".csv,text/csv,text/plain"></label>
       <button class="ghost" id="sample">Load sample data</button>
       <label class="kw">Connected load (kW) <input type="number" id="kw" value="1" min="0.1" step="0.5"></label>
     </div>
-    <p class="hint">One bill per line: <code>period,units,amount,days</code>. Amount in ₹; days is optional. Connected load sets the fixed charge.</p>
+    <p class="hint">One row per bill (at least 4). Pick the From and To months and the days fill in automatically; you can edit them if your bill shows a different number. Units and amount are on the bill. The fixed charge uses your connected load.</p>
     <p class="err" id="err" role="alert"></p>
   </section>
   <section id="planner">
@@ -80,4 +82,3 @@
 <script type="module" src="js/main.js"></script>
 </body>
 </html>
-

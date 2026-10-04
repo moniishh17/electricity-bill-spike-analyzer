@@ -68,3 +68,15 @@ select{font:inherit;padding:8px;border-radius:8px;border:1px solid var(--line);b
 #bd p,#ap-out p{margin:10px 0 0}#bd .warn{color:var(--spike);font-weight:600}
 tr.total td{font-weight:700;border-top:2px solid var(--ink)}
 @media(max-width:560px){.links a:nth-child(n+3){display:none}}
+.bill-head,.bill-row{display:grid;grid-template-columns:1.4fr 1fr 1fr .8fr 40px;gap:8px;align-items:center}
+.bill-head{font-size:13px;font-weight:600;color:var(--mute);margin-bottom:6px;padding-left:2px}
+.bill-row{margin-bottom:8px}
+.bill-row input{width:100%;min-width:0;font:inherit;padding:9px 10px;border-radius:8px;border:1px solid var(--line);background:var(--paper);color:var(--ink)}
+.bill-row .del{padding:4px 0;font-size:20px;line-height:1;border-width:1px}
+@media(max-width:560px){.bill-head,.bill-row{grid-template-columns:1.2fr 1fr 1fr .7fr 32px;gap:6px}.bill-row input{padding:8px 6px}}
+.bill-head,.bill-row{grid-template-columns:1.9fr 1fr 1fr .9fr 40px}
+.period{display:grid;gap:6px}
+.period label{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--mute)}
+.period label span{width:30px;flex:none}
+.period select{flex:1;min-width:0;font:inherit;font-size:14px;padding:7px 6px;border-radius:8px;border:1px solid var(--line);background:var(--paper);color:var(--ink)}
+@media(max-width:560px){.bill-head{display:none}.bill-row{grid-template-columns:1fr 1fr 1fr 32px;border:1px solid var(--line);border-radius:10px;padding:10px}.period{grid-column:1/-1}}

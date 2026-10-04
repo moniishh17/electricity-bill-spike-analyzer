@@ -4,8 +4,11 @@ Paste or upload your monthly electricity bills and find out which months were un
 
 ## Features
 - **Tamil Nadu aware:** bi-monthly billing, telescopic LT-IA slabs, fixed charge by connected load, and the 500-unit cliff where the free allowance drops from 200 to 100 units
+- Structured bill entry: choose each bill's From and To month from dropdowns and the days are calculated automatically (leap years included, still editable); add/remove rows, validation that names the bill, plus CSV import
 - Bill audit: compares what you were billed with what the slab tariff predicts and flags large gaps
 - Robust spike detection (median and MAD) with per-day normalization for uneven billing periods
+- **Built as a guide:** a plain-language explainer (units, slabs, the 500-unit cliff, fixed charge, how to read a bill), a slab-by-slab bill calculator, and an appliance usage estimator for people new to electricity bills
+- **Cliff Guard:** mid-cycle planner that projects your bill and gives a daily unit budget to stay under 500 units
 - Tariff curve chart: your bills plotted against the cost curve, with the cliff marked
 - Meter-style hero where extra spend rolls onto kWh-meter digit drums; dark mode, keyboard accessible, respects reduced motion
 - CSV validation with line-numbered errors; user text is never inserted as HTML
@@ -33,6 +36,9 @@ css/styles.css      theme tokens and layout
 js/parser.js        CSV -> rows + errors
 js/analysis.js      statistics (pure functions)
 js/tariff.js        TN slab tariff, fixed charge, 500-unit cliff
+js/learn.js         bill calculator and appliance estimator
+js/period.js        month labels and day counts for a billing period
+js/planner.js       Cliff Guard cycle projection
 js/insights.js      analysis -> plain-language causes
 js/chart.js         SVG chart renderer
 js/main.js          wires the UI together
