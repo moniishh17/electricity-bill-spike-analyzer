@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>BillSpike: Tamil Nadu electricity bill analyzer · தமிழ்நாடு மின் கட்டண பகுப்பாய்வு</title>
 <meta name="description" content="Find out why your TNPDCL bi-monthly electricity bill spiked. Slab-accurate, in English and Tamil, runs in your browser.">
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=DM+Mono:wght@500&family=Noto+Sans+Tamil:wght@400..700&display=swap">
+<link rel="preload" href="fonts/archivo-latin-wdth-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/fonts.css">
 <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
@@ -14,10 +14,14 @@
   <h2 id="gate-h">Choose your language<br>மொழியைத் தேர்ந்தெடுக்கவும்</h2>
   <div class="row"><button class="lang-btn" data-lang="en" type="button">English</button><button class="lang-btn" data-lang="ta" type="button">தமிழ்</button></div>
 </dialog>
-<main>
+<main id="top">
   <nav class="topbar">
-    <strong>BillSpike</strong>
-    <span class="links"><a href="#howto" data-i18n="n.how">How to use</a><a href="#guide" data-i18n="n.guide">Guide</a><a href="#analyze" data-i18n="n.analyze">Analyze</a><a href="#planner" data-i18n="n.guard">Cliff Guard</a><a href="#learn" data-i18n="n.calc">Calculator</a><a href="#tariff" data-i18n="n.tariff">Tariff</a><a href="#sources" data-i18n="n.sources">Sources</a></span>
+    <a class="brand" href="#top" aria-label="BillSpike"><span class="brand-mark" aria-hidden="true"></span>BillSpike</a>
+    <div class="tabs" role="tablist" aria-label="Sections">
+      <button class="tab-btn" role="tab" data-go="analyze" type="button" data-i18n="tab.analyze">Analyze my bills</button>
+      <button class="tab-btn" role="tab" data-go="learn" type="button" data-i18n="tab.learn">Learn</button>
+      <button class="tab-btn" role="tab" data-go="tariff" type="button" data-i18n="tab.tariff">Tariff and sources</button>
+    </div>
     <span class="lang" role="group" aria-label="Language"><button class="lang-btn ghost" data-lang="en" type="button" aria-pressed="true">EN</button><button class="lang-btn ghost" data-lang="ta" type="button" aria-pressed="false">தமிழ்</button></span>
   </nav>
   <header class="hero">
@@ -25,6 +29,7 @@
       <p class="eyebrow" data-i18n="h.eyebrow">TNPDCL · Domestic · bi-monthly billing</p>
       <h1 data-i18n="h.title">Why did my electricity bill spike?</h1>
       <p class="lead" data-i18n="h.lead">Enter your bi-monthly bills. BillSpike finds the unusual ones, checks each against the Tamil Nadu slab tariff and shows when you crossed the 500-unit line. Everything runs in your browser; nothing is uploaded.</p>
+      <div class="cta"><a class="btn-primary" href="#analyze" data-i18n="h.cta1">Enter my bills</a><button class="ghost" id="hero-sample" type="button" data-i18n="h.cta2">Try with sample data</button></div>
     </div>
     <div class="meter" role="group" aria-label="Extra amount paid in spike bills">
       <p class="meter-label" data-i18n="m.label">Extra paid in spike bills</p>
@@ -38,11 +43,6 @@
     <div><b>₹4.70</b><span data-i18n="s.first">first paid rate per unit</span></div>
     <div><b>₹11.55</b><span data-i18n="s.top">top rate per unit</span></div>
     <div><b>2</b><span data-i18n="s.cycle">months per bill</span></div>
-  </div>
-  <div class="tabs" role="tablist" aria-label="Sections">
-    <button class="tab-btn" role="tab" data-go="analyze" type="button" data-i18n="tab.analyze">Analyze my bills</button>
-    <button class="tab-btn" role="tab" data-go="learn" type="button" data-i18n="tab.learn">Learn</button>
-    <button class="tab-btn" role="tab" data-go="tariff" type="button" data-i18n="tab.tariff">Tariff and sources</button>
   </div>
   <section id="howto" data-tab="learn">
     <h2 data-i18n="hw.h">How to use BillSpike</h2>
@@ -94,11 +94,12 @@
     <div id="plan" aria-live="polite"></div>
   </section>
   <div id="out" data-tab="analyze" hidden>
+    <div class="kpis" id="kpis"></div>
     <section><p class="summary" id="summary"></p><p id="mode"></p><div class="chart" id="chart"></div></section>
     <section id="forecast"><h2 data-i18n="fc.h">Next bill forecast</h2><p class="hint" data-i18n="fc.hint">A rough guess for your next bill, from the bills you entered.</p><div id="fc-out" aria-live="polite"></div></section>
     <section><h2 data-i18n="r.curve.h">Your bills against the tariff</h2><p class="hint" data-i18n="r.curve.hint">Each dot is one of your bills. The line is what the tariff charges for that many units.</p><div class="chart" id="curve"></div></section>
     <section><h2 data-i18n="r.table.h">Bill by bill</h2><div class="scroll"><table id="table"></table></div></section>
-    <section><h2 data-i18n="r.what.h">What to check</h2><ul id="reasons"></ul></section>
+    <section><h2 data-i18n="r.what.h">What to check</h2><ul class="checks" id="reasons"></ul></section>
   </div>
   <section id="learn" data-tab="learn">
     <h2 data-i18n="c.h">See how a bill is calculated</h2>
@@ -123,7 +124,7 @@
     <p data-i18n="so.p1">Rates follow TNERC Tariff Order No. 6 of 2024 and the May 2026 free-units scheme, as reported by public calculators and news. They have not been checked against the official order. Last reviewed 4 October 2026.</p>
     <p data-i18n="so.p2">Estimates exclude arrears and late fees. For disputes call the TNPDCL helpline 1912. This is an independent project, not affiliated with TNPDCL.</p>
   </section>
-  <footer data-i18n="f.p">BillSpike · Open source · runs in your browser</footer>
+  <footer><p data-i18n="f.p">BillSpike · Open source · runs in your browser</p><p><a href="https://github.com/moniishh17/electricity-bill-spike-analyzer" data-i18n="f.gh">Source code on GitHub</a></p></footer>
 </main>
 <script type="module" src="js/main.js"></script>
 </body>

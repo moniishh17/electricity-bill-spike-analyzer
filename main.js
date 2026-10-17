@@ -7,7 +7,7 @@ import { plan } from "./planner.js";
 import { explain } from "./insights.js";
 import { renderChart, renderCurve } from "./chart.js";
 import { t, initLang } from "./i18n.js";
-import { initTabs } from "./tabs.js";
+import { initTabs, showTab } from "./tabs.js";
 import { yoy, forecast } from "./usage.js";
 
 const $ = (id) => document.getElementById(id);
@@ -72,6 +72,24 @@ function renderForecast(result, kw) {
   box.replaceChildren(...lines);
 }
 
+function renderKpis(result) {
+  const spikes = result.bills.filter((b) => b.spike).length;
+  const off = result.bills.filter((b) => b.audit).length;
+  const tiles = [
+    [t("kpi.spikes"), String(spikes), spikes ? "bad" : "good"],
+    [t("kpi.extra"), inr(result.extraCost), result.extraCost ? "bad" : "good"],
+    [t("kpi.usual"), `${+result.baseline.toFixed(result.baseline < 20 ? 1 : 0)}`, ""],
+    [t("kpi.off"), String(off), off ? "bad" : "good"],
+  ];
+  $("kpis").replaceChildren(...tiles.map(([label, value, tone], i) =>
+    h("div", { className: "kpi " + tone },
+      h("span", { className: "kpi-l", textContent: label }),
+      h("b", { className: "kpi-v", textContent: value }),
+      ...(i === 2 ? [h("span", { className: "kpi-u", textContent: result.unit })] : []))));
+}
+
+const SEV = { high: "sev.high", warn: "sev.warn", info: "sev.info", ok: "sev.ok" };
+
 function render(result, kw) {
   const spikes = result.bills.filter((b) => b.spike);
   const names = spikes.map((b) => b.month).join(", ");
@@ -82,7 +100,11 @@ function render(result, kw) {
   renderForecast(result, kw);
   renderCurve($("curve"), result.bills, kw);
   renderTable(result);
-  $("reasons").replaceChildren(...explain(result).map(([title, d]) => h("li", {}, h("strong", { textContent: title + ": " }), d)));
+  renderKpis(result);
+  $("reasons").replaceChildren(...explain(result).map(([title, d, level]) =>
+    h("li", { className: "sev-" + level },
+      h("span", { className: "sev", textContent: t(SEV[level]) }),
+      h("div", {}, h("strong", { textContent: title }), h("p", { textContent: d })))));
   $("out").hidden = false;
 }
 
@@ -173,12 +195,13 @@ function restore() {
 list.addEventListener("input", save);
 list.addEventListener("change", save);
 
-function run() {
+function run(scroll = false) {
   const kw = Math.max(0.1, parseFloat($("kw").value) || 1);
   const { rows, errors } = validateRows(readRows());
   $("err").textContent = errors.join(" ");
   try {
     render(enrich(analyze(rows), kw), kw);
+    if (scroll) $("out").scrollIntoView({ behavior: "smooth", block: "start" });
   } catch (e) {
     $("out").hidden = true;
     setMeter(0, t("meter.wait"));
@@ -202,7 +225,7 @@ function runPlanner() {
 }
 
 $("plan-go").addEventListener("click", runPlanner);
-$("go").addEventListener("click", run);
+$("go").addEventListener("click", () => run(true));
 $("kw").addEventListener("change", () => { save(); validateRows(readRows()).rows.length >= 4 && run(); });
 $("add").addEventListener("click", () => { addRow(); list.lastChild.querySelector("input").focus(); save(); });
 $("clear").addEventListener("click", () => {
@@ -220,11 +243,14 @@ $("export").addEventListener("click", () => {
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 });
-$("sample").addEventListener("click", async () => {
+async function loadSample() {
+  showTab("analyze");
   setRows(parseCSV(await (await fetch("data/sample.csv")).text()).rows);
   save();
-  run();
-});
+  run(true);
+}
+$("sample").addEventListener("click", loadSample);
+$("hero-sample").addEventListener("click", loadSample);
 $("file").addEventListener("change", async (e) => {
   const f = e.target.files[0];
   if (!f) return;
@@ -232,7 +258,7 @@ $("file").addEventListener("change", async (e) => {
   setRows(rows);
   save();
   if (errors.length) $("err").textContent = errors.join(" ");
-  else run();
+  else run(true);
   e.target.value = "";
 });
 if (!restore()) for (let i = 0; i < 4; i++) addRow();

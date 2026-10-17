@@ -5,6 +5,8 @@
 import { ta } from "./lang-ta.js";
 
 export const en = {
+  "kpi.spikes": "Spike bills", "kpi.extra": "Extra paid", "kpi.usual": "Usual usage", "kpi.off": "Bills off tariff",
+  "sev.high": "Check this", "sev.warn": "Worth a look", "sev.info": "Good to know", "sev.ok": "All clear",
   "meter.wait": "Waiting for your bills", "meter.none": "No spike bills found", "meter.spikes": "Spike bills ({n}): {names}",
   "sum.spikes": "{n} spike(s) found: {names}. Extra cost about {amt}.", "sum.none": "No unusual spikes. Your usage stays close to normal.",
   "mode.day": "Compared per day, so billing length does not skew results.", "mode.total": "Compared by total units. Add days to compare per day.",
