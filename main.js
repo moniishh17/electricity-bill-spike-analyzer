@@ -1,0 +1,249 @@
+import { MONTHS, resolveTo, periodDays, periodLabel, parsePeriodLabel, periodDates } from "./period.js";
+import { parseCSV, validateRows } from "./parser.js";
+import { analyze } from "./analysis.js";
+import { expectedBill, cliffReport, tariffFor } from "./tariff.js";
+import { initLearn } from "./learn.js";
+import { plan } from "./planner.js";
+import { explain } from "./insights.js";
+import { renderChart, renderCurve } from "./chart.js";
+import { t, initLang } from "./i18n.js";
+import { initTabs } from "./tabs.js";
+import { yoy, forecast } from "./usage.js";
+
+const $ = (id) => document.getElementById(id);
+const inr = (n) => "₹" + Math.round(n).toLocaleString("en-IN");
+const h = (tag, props = {}, ...kids) => {
+  const n = Object.assign(document.createElement(tag), props);
+  n.append(...kids);
+  return n;
+};
+
+const DRUMS = 5;
+function buildDrums() {
+  $("drums").replaceChildren(...Array.from({ length: DRUMS }, (_, i) =>
+    h("div", { className: "drum" },
+      h("div", { className: "strip", style: `transition-delay:${i * 90}ms` },
+        ...Array.from({ length: 10 }, (_, d) => h("span", { textContent: d }))))));
+}
+function setMeter(value, sub) {
+  const s = String(Math.min(Math.round(value), 10 ** DRUMS - 1)).padStart(DRUMS, "0");
+  [...$("drums").children].forEach((d, i) => { d.firstChild.style.transform = `translateY(${-Number(s[i]) * 10}%)`; });
+  $("meterSub").textContent = sub;
+  $("meterText").textContent = `${inr(value)}. ${sub}`;
+}
+
+/** Add tariff-based fields: expected amount, billing gap, and 500-unit cliff cost. */
+function enrich(result, kw) {
+  result.bills = result.bills.map((b) => {
+    const { tariff, applies } = tariffFor(b.start, b.end);
+    if (!applies) return { ...b, expected: null, gap: null, cliff: null, audit: false, unchecked: true };
+    const expected = expectedBill(b.units, kw, tariff), gap = b.amount - expected;
+    return { ...b, expected, gap, cliff: cliffReport(b.units, kw, tariff), audit: Math.abs(gap) > Math.max(100, expected * 0.15) };
+  });
+  result.bills = yoy(result.bills);
+  return result;
+}
+
+function renderTable(result) {
+  const cols = [t("th.period"), t("th.units"), t("th.vs"), t("th.billed"), t("th.tariff"), t("th.gap"), t("th.yoy")];
+  const rows = result.bills.map((b) =>
+    h("tr", { className: b.spike ? "spike" : "" },
+      h("td", {}, b.month, ...(b.spike ? [h("span", { className: "tag", textContent: t("tag.spike") })] : []), ...(b.cliff ? [h("span", { className: "tag", textContent: ">500" })] : [])),
+      h("td", { textContent: b.units }),
+      h("td", { textContent: `${b.pct >= 0 ? "+" : ""}${Math.round(b.pct)}%` }),
+      h("td", { textContent: inr(b.amount) }),
+      h("td", { textContent: b.expected == null ? "—" : inr(b.expected) }),
+      h("td", { className: b.audit ? "gap" : "", textContent: b.gap == null ? "—" : `${b.gap >= 0 ? "+" : "-"}${inr(Math.abs(b.gap))}` }),
+      h("td", { textContent: b.yoy ? `${b.yoy.pct >= 0 ? "+" : ""}${Math.round(b.yoy.pct)}%` : "—" })));
+  $("table").replaceChildren(h("tr", {}, ...cols.map((c) => h("th", { textContent: c }))), ...rows);
+}
+
+function renderForecast(result, kw) {
+  const f = forecast(result.bills, kw, result.perDay);
+  const box = $("fc-out");
+  if (!f) return box.replaceChildren(h("p", { className: "hint", textContent: t("fc.need") }));
+  const label = periodLabel(f.fromM, f.fromY, f.toM);
+  const main = f.bill == null ? t("fc.line.nobill", { label, d: f.days, u: f.units }) : t("fc.line", { label, d: f.days, u: f.units, b: inr(f.bill) });
+  const lines = [h("p", { className: "fc-main", textContent: main }),
+    h("p", { textContent: f.basis === "seasonal" ? t("fc.seasonal", { p: Math.round(f.ratio * 100) }) : t("fc.recent") })];
+  if (f.bill == null) lines.push(h("p", { textContent: t("fc.nobill") }));
+  else if (f.crosses) lines.push(h("p", { className: "warn", textContent: t("fc.cross", { u: f.budget.toFixed(1) }) }));
+  else if (f.budget !== null) lines.push(h("p", { textContent: t("fc.safe") }));
+  box.replaceChildren(...lines);
+}
+
+function render(result, kw) {
+  const spikes = result.bills.filter((b) => b.spike);
+  const names = spikes.map((b) => b.month).join(", ");
+  $("summary").textContent = spikes.length ? t("sum.spikes", { n: spikes.length, names, amt: inr(result.extraCost) }) : t("sum.none");
+  $("mode").textContent = t(result.perDay ? "mode.day" : "mode.total");
+  setMeter(result.extraCost, spikes.length ? t("meter.spikes", { n: spikes.length, names }) : t("meter.none"));
+  renderChart($("chart"), result);
+  renderForecast(result, kw);
+  renderCurve($("curve"), result.bills, kw);
+  renderTable(result);
+  $("reasons").replaceChildren(...explain(result).map(([title, d]) => h("li", {}, h("strong", { textContent: title + ": " }), d)));
+  $("out").hidden = false;
+}
+
+const list = $("bills");
+const thisYear = new Date().getFullYear();
+const monthOpts = MONTHS.map((t, i) => [i, t]);
+const yearOpts = Array.from({ length: 8 }, (_, i) => [thisYear - 6 + i, thisYear - 6 + i]);
+const q = (row, k) => row.querySelector(`[data-f="${k}"]`);
+
+const select = (key, opts, value, label) => {
+  const s = h("select", {}, ...opts.map(([v, t]) => h("option", { value: v, textContent: t })));
+  s.value = String(value);
+  s.dataset.f = key;
+  s.setAttribute("aria-label", label);
+  return s;
+};
+const cell = (key, type, val, extra) => {
+  const i = h("input", { type, value: val ?? "", ...extra });
+  i.dataset.f = key;
+  i.dataset.i18nPh = "ph." + key;
+  i.setAttribute("aria-label", key);
+  return i;
+};
+const rowPeriod = (row) => ({ fromM: +q(row, "fm").value, fromY: +q(row, "fy").value, toM: +q(row, "tm").value });
+const autoDays = (row) => {
+  const p = rowPeriod(row);
+  q(row, "days").value = periodDays(p.fromM, p.fromY, p.toM);
+  delete row.dataset.label;
+};
+
+const tr = (tag, key) => { const n = h(tag, { textContent: t(key) }); n.dataset.i18n = key; return n; };
+function addRow(d = {}) {
+  let p = d.period;
+  if (!p) { // continue from the previous bill's period
+    const last = list.lastElementChild;
+    if (last) {
+      const x = rowPeriod(last);
+      const fromM = (x.toM + 1) % 12;
+      p = { fromM, fromY: x.toM === 11 ? resolveTo(x.fromM, x.fromY, x.toM) + 1 : resolveTo(x.fromM, x.fromY, x.toM), toM: (fromM + 1) % 12 };
+    } else p = { fromM: 0, fromY: thisYear - 1, toM: 1 };
+  }
+  const row = h("div", { className: "bill-row" },
+    h("div", { className: "period" },
+      h("label", {}, tr("span", "f.from"), select("fm", monthOpts, p.fromM, "From month"), select("fy", yearOpts, p.fromY, "From year")),
+      h("label", {}, tr("span", "f.to"), select("tm", monthOpts, p.toM, "To month"))),
+    cell("units", "number", d.units, { placeholder: t("ph.units"), min: 0, step: 1 }),
+    cell("amount", "number", d.amount, { placeholder: t("ph.amount"), min: 0, step: 1 }),
+    cell("days", "number", d.days, { placeholder: t("ph.days"), min: 1, step: 1, title: "Calculated from the months. Edit to override." }),
+    h("button", { className: "ghost del", type: "button", textContent: "×", title: "Remove this bill", onclick: () => { row.remove(); save(); } }));
+  row.addEventListener("change", (e) => {
+    const k = e.target.dataset.f;
+    if (k === "fm") q(row, "tm").value = (+e.target.value + 1) % 12; // a bill covers two months by default
+    if (["fm", "fy", "tm"].includes(k)) autoDays(row);
+  });
+  list.append(row);
+  if (d.label) row.dataset.label = d.label; // a custom label from an imported file
+  else if (d.days == null) autoDays(row);
+}
+const setRows = (rows) => {
+  list.replaceChildren();
+  rows.forEach((r) => {
+    const period = parsePeriodLabel(r.month, thisYear - 1);
+    addRow({ period, label: period ? null : r.month, units: r.units, amount: r.amount, days: r.days });
+  });
+};
+const readRows = () => [...list.children].map((r) => {
+  const { fromM, fromY, toM } = rowPeriod(r);
+  return {
+    month: r.dataset.label || periodLabel(fromM, fromY, toM),
+    ...(r.dataset.label ? { start: null, end: null } : periodDates(fromM, fromY, toM)),
+    units: q(r, "units").value, amount: q(r, "amount").value, days: q(r, "days").value,
+  };
+});
+
+// Persistence: keep the form in localStorage so a refresh does not wipe it.
+const KEY = "billspike:v1";
+const rowState = (r) => ({ ...rowPeriod(r), label: r.dataset.label || null, units: q(r, "units").value, amount: q(r, "amount").value, days: q(r, "days").value });
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ kw: $("kw").value, rows: [...list.children].map(rowState) })); } catch {} };
+function restore() {
+  try {
+    const s = JSON.parse(localStorage.getItem(KEY));
+    if (!s?.rows?.length) return false;
+    $("kw").value = s.kw || 1;
+    s.rows.forEach((r) => addRow({ period: { fromM: r.fromM, fromY: r.fromY, toM: r.toM }, label: r.label, units: r.units, amount: r.amount, days: r.days === "" ? null : r.days }));
+    return true;
+  } catch { return false; }
+}
+list.addEventListener("input", save);
+list.addEventListener("change", save);
+
+function run() {
+  const kw = Math.max(0.1, parseFloat($("kw").value) || 1);
+  const { rows, errors } = validateRows(readRows());
+  $("err").textContent = errors.join(" ");
+  try {
+    render(enrich(analyze(rows), kw), kw);
+  } catch (e) {
+    $("out").hidden = true;
+    setMeter(0, t("meter.wait"));
+    $("err").textContent = [...errors, e.message].join(" ");
+  }
+}
+
+function runPlanner() {
+  const kw = Math.max(0.1, parseFloat($("kw").value) || 1);
+  const box = $("plan");
+  try {
+    const p = plan({ used: Number($("used").value), elapsed: Number($("elapsed").value), kw });
+    const lines = [t("p.track", { r: p.rate.toFixed(1), p: p.projected, b: inr(p.bill) })];
+    if (p.alreadyOver) lines.push(t("p.over"));
+    else if (p.crosses) lines.push(t("p.cross", { x: inr(p.extra), d: p.left, u: p.budget.toFixed(1), c: p.cutPerDay.toFixed(1) }));
+    else lines.push(p.left > 0 ? t("p.safe", { u: p.budget.toFixed(1), d: p.left }) : t("p.done"));
+    box.replaceChildren(...lines.map((line, i) => h("p", { className: i && p.crosses ? "warn" : "", textContent: line })));
+  } catch (e) {
+    box.replaceChildren(h("p", { className: "err", textContent: e.message }));
+  }
+}
+
+$("plan-go").addEventListener("click", runPlanner);
+$("go").addEventListener("click", run);
+$("kw").addEventListener("change", () => { save(); validateRows(readRows()).rows.length >= 4 && run(); });
+$("add").addEventListener("click", () => { addRow(); list.lastChild.querySelector("input").focus(); save(); });
+$("clear").addEventListener("click", () => {
+  list.replaceChildren();
+  for (let i = 0; i < 4; i++) addRow();
+  $("out").hidden = true;
+  $("err").textContent = "";
+  save();
+});
+$("export").addEventListener("click", () => {
+  const { rows } = validateRows(readRows());
+  if (!rows.length) { $("err").textContent = "Nothing to export yet. Fill in at least one bill."; return; }
+  const csv = ["period,units,amount,days", ...rows.map((r) => `${r.month},${r.units},${r.amount},${r.days ?? ""}`)].join("\n");
+  const a = h("a", { href: URL.createObjectURL(new Blob([csv], { type: "text/csv" })), download: "my-bills.csv" });
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+});
+$("sample").addEventListener("click", async () => {
+  setRows(parseCSV(await (await fetch("data/sample.csv")).text()).rows);
+  save();
+  run();
+});
+$("file").addEventListener("change", async (e) => {
+  const f = e.target.files[0];
+  if (!f) return;
+  const { rows, errors } = parseCSV(await f.text());
+  setRows(rows);
+  save();
+  if (errors.length) $("err").textContent = errors.join(" ");
+  else run();
+  e.target.value = "";
+});
+if (!restore()) for (let i = 0; i < 4; i++) addRow();
+buildDrums();
+initTabs();
+initLang();
+setMeter(0, t("meter.wait"));
+const refreshLearn = initLearn($("kw"));
+refreshLearn();
+document.addEventListener("langchange", () => {
+  if ($("out").hidden) setMeter(0, t("meter.wait")); else run();
+  if ($("plan").children.length) runPlanner();
+  refreshLearn();
+});

@@ -12,6 +12,9 @@ Paste or upload your monthly electricity bills and find out which months were un
 - Robust spike detection (median and MAD) with per-day normalization for uneven billing periods
 - **English and Tamil:** the whole page, including results, charts and planner, switches language; a first-visit prompt asks the user to choose. A test fails if any text is missing its Tamil translation
 - **Built as a guide:** a plain-language explainer (units, slabs, the 500-unit cliff, fixed charge, how to read a bill), a slab-by-slab bill calculator, and an appliance usage estimator for people new to electricity bills
+- **Usage analysis:** each bill is compared with the same period a year earlier, and a next-bill forecast uses last year's matching period (scaled by this year's trend) or, with less history, the average of your last three normal bills; spike bills are left out
+- **Appliance planner:** add several appliances with quantity and hours to see combined units and the biggest user against the 500-unit line
+- **How-to walkthrough:** six steps explaining where each figure on a bill goes, in English and Tamil
 - **Cliff Guard:** mid-cycle planner that projects your bill and gives a daily unit budget to stay under 500 units
 - Tariff curve chart: your bills plotted against the cost curve, with the cliff marked
 - Meter-style hero where extra spend rolls onto kWh-meter digit drums; dark mode, keyboard accessible, respects reduced motion
@@ -44,6 +47,8 @@ js/learn.js         bill calculator and appliance estimator
 js/i18n.js          language switching (English text from the page, Tamil from lang-ta.js)
 js/lang-ta.js       Tamil translations
 js/period.js        month labels and day counts for a billing period
+js/usage.js         year-on-year comparison and next-bill forecast
+js/tabs.js          Analyze / Learn / Tariff tabs
 js/planner.js       Cliff Guard cycle projection
 js/insights.js      analysis -> plain-language causes
 js/chart.js         SVG chart renderer
