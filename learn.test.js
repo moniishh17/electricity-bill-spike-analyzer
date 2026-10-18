@@ -39,3 +39,13 @@ test("empty appliance list is safe", () => {
   assert.equal(r.total, 0);
   assert.equal(r.top, null);
 });
+
+import { donutSlices } from "../js/learn.js";
+test("donut keeps the five biggest appliances and folds the rest into Other", () => {
+  const rows = Array.from({ length: 8 }, (_, i) => ({ key: "ap." + i, units: 8 - i, share: (8 - i) / 36 }));
+  const s = donutSlices(rows);
+  assert.equal(s.length, 6);
+  assert.equal(s[5].key, null);
+  assert.equal(s[5].units, 6);
+  assert.ok(Math.abs(s.reduce((n, x) => n + x.share, 0) - 1) < 1e-9);
+});

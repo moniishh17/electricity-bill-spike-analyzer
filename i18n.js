@@ -5,6 +5,8 @@
 import { ta } from "./lang-ta.js";
 
 export const en = {
+  "ap.other": "Other", "ap.center": "units in 60 days", "ap.limit": "{p}% of the 500-unit line",
+  "ap.bill": "Rough bill if these were your only use: {b}. Fixed and fuel charges included.",
   "kpi.spikes": "Spike bills", "kpi.extra": "Extra paid", "kpi.usual": "Usual usage", "kpi.off": "Bills off tariff",
   "sev.high": "Check this", "sev.warn": "Worth a look", "sev.info": "Good to know", "sev.ok": "All clear",
   "meter.wait": "Waiting for your bills", "meter.none": "No spike bills found", "meter.spikes": "Spike bills ({n}): {names}",

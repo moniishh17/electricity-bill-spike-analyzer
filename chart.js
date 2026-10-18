@@ -141,3 +141,31 @@ export function renderCurve(host, bills, kw) {
     svg.append(dot, hit);
   }
 }
+
+/**
+ * Donut of shares. slices = [{ name, units, share, cls }], cls picks the fill colour from CSS (s0..s4, so).
+ * The centre shows the total; every ring segment has a hover/focus tooltip and a 2px gap separates neighbours.
+ */
+export function renderDonut(host, slices, { total, label }) {
+  const S = 220, c = S / 2, R = 104, w = 30, r = R - w / 2, gap = 2 / r;
+  const svg = root(S, S, label);
+  svg.setAttribute("class", "donut-svg");
+  host.replaceChildren(svg);
+  const tip = tooltip(host);
+  let a = -Math.PI / 2;
+  const pt = (ang) => [c + r * Math.cos(ang), c + r * Math.sin(ang)];
+  for (const s of slices) {
+    const sweep = s.share * 2 * Math.PI;
+    const a0 = a + gap / 2, a1 = a + sweep - gap / 2;
+    a += sweep;
+    if (a1 <= a0) continue;
+    const [x0, y0] = pt(a0), [x1, y1] = pt(a1);
+    const arc = svgEl("path", { d: `M${x0},${y0}A${r},${r} 0 ${a1 - a0 > Math.PI ? 1 : 0} 1 ${x1},${y1}`, class: `seg ${s.cls}`, "stroke-width": w, fill: "none" });
+    wire(arc, tip, [[s.name], [`${Math.round(s.units)} ${t("th.units").toLowerCase()}`, true], [`${Math.round(s.share * 100)}%`]], () => arc.classList.add("on"), () => arc.classList.remove("on"));
+    svg.append(arc);
+  }
+  svg.append(
+    svgEl("text", { x: c, y: c + 4, "text-anchor": "middle", class: "donut-n" }, Math.round(total).toLocaleString("en-IN")),
+    svgEl("text", { x: c, y: c + 24, "text-anchor": "middle" }, t("ap.center")),
+  );
+}

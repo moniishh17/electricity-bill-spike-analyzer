@@ -1,6 +1,18 @@
 /** Learning tools: slab-by-slab bill calculator, multi-appliance estimator and the tariff reference tables. */
 import { breakdown, expectedBill, TARIFF } from "./tariff.js";
 import { t } from "./i18n.js";
+import { renderDonut } from "./chart.js";
+
+const SLOTS = 5; // largest appliances get their own colour; the rest fold into "Other"
+
+/** Slices for the donut: the biggest SLOTS appliances, everything else summed as Other. */
+export function donutSlices(rows) {
+  const sorted = [...rows].sort((a, b) => b.units - a.units);
+  const head = sorted.slice(0, SLOTS).map((r, i) => ({ key: r.key, units: r.units, share: r.share, cls: "s" + i }));
+  const rest = sorted.slice(SLOTS);
+  if (rest.length) head.push({ key: null, units: rest.reduce((n, r) => n + r.units, 0), share: rest.reduce((n, r) => n + r.share, 0), cls: "so" });
+  return head;
+}
 
 // [name key, watts, typical hours per day]. Typical values; compressors and mixers run only part of the time.
 export const APPLIANCES = [
@@ -63,11 +75,28 @@ export function initLearn(kwInput) {
         rm.addEventListener("click", () => { list.splice(i, 1); renderAppliances(); });
         return el("tr", {}, el("td", { textContent: t(r.key) }), el("td", { textContent: r.qty }), el("td", { textContent: r.hours }), el("td", { textContent: Math.round(r.units) }), el("td", {}, rm));
       });
+      if (rows.length > 1) out.push(viz(rows, total));
       out.push(el("div", { className: "scroll" }, el("table", {}, head(t("ap.col.name"), t("ap.col.qty"), t("ap.col.h"), t("ap.col.u"), ""), ...body)));
       out.push(note("", t("ap.total", { u: Math.round(total), p: Math.round((total / TARIFF.cliff) * 100) })));
       if (rows.length > 1 && top) out.push(note("", t("ap.top", { n: t(top.key), s: Math.round(top.share * 100) })));
     }
     $("ap-out").replaceChildren(...out);
+  }
+  function viz(rows, total) {
+    const slices = donutSlices(rows).map((x) => ({ ...x, name: x.key ? t(x.key) : t("ap.other") }));
+    const kw = Math.max(0.1, parseFloat(kwInput.value) || 1);
+    const pct = (total / TARIFF.cliff) * 100;
+    const donut = el("div", { className: "donut" });
+    renderDonut(donut, slices, { total, label: t("ap.total", { u: Math.round(total), p: Math.round(pct) }) });
+    const legend = el("ul", { className: "legend" }, ...slices.map((x) =>
+      el("li", {}, el("span", { className: "sw " + x.cls }), el("span", { className: "lg-n", textContent: x.name }),
+        el("span", { className: "lg-v", textContent: `${Math.round(x.units)} · ${Math.round(x.share * 100)}%` }))));
+    const level = pct > 100 ? "over" : pct >= 80 ? "near" : "";
+    const bar = el("div", { className: "limit " + level, role: "img", "aria-label": t("ap.limit", { p: Math.round(pct) }) },
+      el("div", { className: "limit-fill", style: `width:${Math.min(pct, 100)}%` }));
+    return el("div", { className: "ap-viz" }, donut, el("div", {}, legend,
+      el("p", { className: "limit-l", textContent: t("ap.limit", { p: Math.round(pct) }) }), bar,
+      el("p", { className: "hint", textContent: t("ap.bill", { b: inr(expectedBill(total, kw)) }) })));
   }
   function addAppliance() {
     const qty = Number($("ap-qty").value), hours = Number($("ap-hours").value);
