@@ -1,0 +1,70 @@
+# Electricity Bill Spike Analyzer
+
+[![tests](https://github.com/moniishh17/electricity-bill-spike-analyzer/actions/workflows/test.yml/badge.svg)](https://github.com/moniishh17/electricity-bill-spike-analyzer/actions/workflows/test.yml)
+
+Paste or upload your monthly electricity bills and find out which months were unusually high, how much extra they cost, and what to check. Runs fully in the browser with no backend, build step or dependencies.
+
+## Features
+- **Tamil Nadu aware:** bi-monthly billing, telescopic LT-IA slabs, fixed charge by connected load, and the 500-unit cliff where the free allowance drops from 200 to 100 units
+- Structured bill entry: choose each bill's From and To month from dropdowns and the days are calculated automatically (leap years included, still editable); add/remove rows, validation that names the bill, plus CSV import
+- Your bills are saved in the browser between visits and can be exported to CSV
+- Bill audit: compares what you were billed with what the slab tariff predicts and flags large gaps
+- Robust spike detection (median and MAD) with per-day normalization for uneven billing periods
+- **English and Tamil:** the whole page, including results, charts and planner, switches language; a first-visit prompt asks the user to choose. A test fails if any text is missing its Tamil translation
+- **Built as a guide:** a plain-language explainer (units, slabs, the 500-unit cliff, fixed charge, how to read a bill), a slab-by-slab bill calculator, and an appliance usage estimator for people new to electricity bills
+- **Usage analysis:** each bill is compared with the same period a year earlier, and a next-bill forecast uses last year's matching period (scaled by this year's trend) or, with less history, the average of your last three normal bills; spike bills are left out
+- **Appliance planner:** add several appliances with quantity and hours to see combined units and the biggest user against the 500-unit line
+- **How-to walkthrough:** six steps explaining where each figure on a bill goes, in English and Tamil
+- **Cliff Guard:** mid-cycle planner that projects your bill and gives a daily unit budget to stay under 500 units
+- Tariff curve chart: your bills plotted against the cost curve, with the cliff marked
+- Meter-style hero where extra spend rolls onto kWh-meter digit drums; dark mode, keyboard accessible, respects reduced motion
+- CSV validation with line-numbered errors; user text is never inserted as HTML
+
+## Input format
+```
+period,units,amount,days
+Jan–Feb,410,1700,59
+```
+Units per bi-monthly bill, amount in ₹, days optional. See `data/sample.csv`.
+
+## Tariff data
+Tariffs live in `js/tariff.js` as a dated list: the 1 July 2024 order (100 free units, one ladder) and the 10 May 2026 scheme (200 free units at or below 500 bi-monthly units). Each bill is matched to the tariff in force for its period. Bills that start before the earliest known tariff, or span a tariff change, are marked "not audited" instead of being flagged. Estimates add the fixed charge and an indicative fuel surcharge (about 0.20 rupees per unit, revised quarterly by TNERC). Domestic bills are treated as exempt from electricity duty and arrears or late fees are not modelled; sources differ on these, so check against your bill. Rates come from public reports, not the official order.
+
+## Run it
+```
+npm start        # serves the folder (ES modules need http, not file://)
+npm test         # unit tests with Node's built-in test runner
+```
+
+## Project structure
+```
+index.html          page shell
+css/styles.css      theme tokens and layout
+js/parser.js        CSV -> rows + errors
+js/analysis.js      statistics (pure functions)
+js/tariff.js        TN slab tariff, fixed charge, 500-unit cliff
+js/learn.js         bill calculator and appliance estimator
+js/i18n.js          language switching (English text from the page, Tamil from lang-ta.js)
+js/lang-ta.js       Tamil translations
+js/period.js        month labels and day counts for a billing period
+js/usage.js         year-on-year comparison and next-bill forecast
+js/tabs.js          Analyze / Learn / Tariff tabs
+js/planner.js       Cliff Guard cycle projection
+js/insights.js      analysis -> plain-language causes
+js/chart.js         SVG chart renderer
+js/main.js          wires the UI together
+tests/              unit tests for parser, analysis and tariff
+data/sample.csv     demo data
+```
+
+## How detection works
+For each bill, `z = 0.6745 × (value − median) / MAD`. A bill is a spike when `z > 2` and it is at least 20% above the median. Median and MAD are used instead of mean and standard deviation because outliers inflate the latter and mask themselves.
+
+## Ideas to extend
+Parse bill PDFs, model state tariff slabs to explain cost per slab, compare the same month year over year.
+
+## Deploy
+GitHub repo → Settings → Pages → deploy from `main`.
+
+## License
+MIT, see `LICENSE`.
