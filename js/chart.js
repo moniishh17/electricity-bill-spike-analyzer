@@ -4,7 +4,7 @@
  * round tick values, and a hover/focus tooltip on every mark. Colour carries meaning only: grey is usual, red is a spike.
  */
 import { expectedBill, TARIFF } from "./tariff.js";
-import { t } from "./i18n.js";
+import { t, mo } from "./i18n.js";
 
 const NS = "http://www.w3.org/2000/svg";
 const svgEl = (tag, attrs = {}, text) => {
@@ -73,8 +73,20 @@ const wire = (el, tip, lines, on, off) => {
   el.addEventListener("blur", close);
 };
 
+/** Split a period label into short lines so long (Tamil) month names never collide: "A–", "B", "2027". */
+function labelLines(label) {
+  const parts = label.split("–");
+  if (parts.length !== 2) return [label];
+  const [a, b] = parts;
+  const m = b.match(/^(.+) (\d{4})$/);
+  return !/\d{4}$/.test(a) && m ? [`${a}–`, m[1], m[2]] : [`${a}–`, b];
+}
+
 export function renderChart(host, { bills, baseline, unit }) {
-  const W = 760, H = 290, p = { l: 48, r: 16, t: 30, b: 34 };
+  const W = 760, slot0 = (W - 48 - 16) / bills.length;
+  const labels = bills.map((b) => mo(b.month));
+  const wrap = Math.max(...labels.map((l) => l.length)) * 6.4 > slot0 - 6;
+  const H = wrap ? 318 : 290, p = { l: 48, r: 16, t: 30, b: wrap ? 62 : 34 };
   const dp = baseline < 20 ? 1 : 0;
   const { ticks, top } = niceTicks(Math.max(...bills.map((b) => b.value), baseline) * 1.08);
   const slot = (W - p.l - p.r) / bills.length;
@@ -84,7 +96,7 @@ export function renderChart(host, { bills, baseline, unit }) {
   host.replaceChildren(svg);
   const tip = tooltip(host);
   grid(svg, p, W, ticks, y, compact);
-  const every = Math.max(1, Math.ceil(64 / slot));
+  const every = wrap ? 1 : Math.max(1, Math.ceil(64 / slot));
   bills.forEach((b, i) => {
     const w = Math.min(24, slot * 0.6), x = p.l + i * slot + (slot - w) / 2, tipY = y(b.value);
     const r = Math.min(4, w / 2, base - tipY);
@@ -92,13 +104,18 @@ export function renderChart(host, { bills, baseline, unit }) {
     const bar = svgEl("path", { d, class: b.spike ? "bar spike" : "bar" });
     const hit = svgEl("rect", { x: p.l + i * slot, y: p.t, width: slot, height: base - p.t, fill: "transparent", class: "hit" });
     wire(hit, tip, [
-      [b.month],
+      [mo(b.month)],
       [`${+b.value.toFixed(dp)} ${unit}`, true],
       [`${t("th.vs")}: ${b.pct >= 0 ? "+" : ""}${Math.round(b.pct)}%`],
       [`${t("th.billed")}: ${inr(b.amount)}`],
     ], () => bar.classList.add("on"), () => bar.classList.remove("on"));
     svg.append(bar, hit);
-    if (i % every === 0) svg.append(svgEl("text", { x: x + w / 2, y: H - 12, "text-anchor": "middle" }, b.month));
+    if (i % every === 0) {
+      const lines = wrap ? labelLines(labels[i]) : [labels[i]];
+      const txt = svgEl("text", { x: x + w / 2, y: base + 18, "text-anchor": "middle" });
+      lines.forEach((ln, k) => txt.append(svgEl("tspan", { x: x + w / 2, dy: k ? 14 : 0 }, ln)));
+      svg.append(txt);
+    }
     if (b.spike) svg.append(svgEl("text", { x: x + w / 2, y: tipY - 8, "text-anchor": "middle", class: "flag" }, `+${Math.round(b.pct)}%`));
   });
   // the usual level: one solid line, labelled at its right end
@@ -135,7 +152,7 @@ export function renderCurve(host, bills, kw) {
   for (const b of bills) {
     const dot = svgEl("circle", { cx: x(b.units), cy: y(b.amount), r: 5, class: b.cliff ? "dot spike" : "dot" });
     const hit = svgEl("circle", { cx: x(b.units), cy: y(b.amount), r: 14, fill: "transparent", class: "hit" });
-    const lines = [[b.month], [`${b.units} ${t("th.units").toLowerCase()}`, true], [`${t("th.billed")}: ${inr(b.amount)}`]];
+    const lines = [[mo(b.month)], [`${b.units} ${t("th.units").toLowerCase()}`, true], [`${t("th.billed")}: ${inr(b.amount)}`]];
     if (b.expected != null) lines.push([`${t("th.tariff")}: ${inr(b.expected)}`]);
     wire(hit, tip, lines, () => dot.classList.add("on"), () => dot.classList.remove("on"));
     svg.append(dot, hit);

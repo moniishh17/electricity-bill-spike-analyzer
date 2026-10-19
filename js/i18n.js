@@ -14,7 +14,7 @@ export const en = {
   "kpi.spikes": "Spike bills", "kpi.extra": "Extra paid", "kpi.usual": "Usual usage", "kpi.off": "Bills off tariff",
   "sev.high": "Check this", "sev.warn": "Worth a look", "sev.info": "Good to know", "sev.ok": "All clear",
   "meter.wait": "Waiting for your bills", "meter.none": "No spike bills found", "meter.spikes": "Spike bills ({n}): {names}",
-  "sum.spikes": "{n} spike(s) found: {names}. Extra cost about {amt}.", "sum.none": "No unusual spikes. Your usage stays close to normal.",
+  "sum.spikes": "{c} found: {names}. Extra cost about {amt}.", "sum.none": "No unusual spikes. Your usage stays close to normal.",
   "mode.day": "Compared per day, so billing length does not skew results.", "mode.total": "Compared by total units. Add days to compare per day.",
   "th.period": "Period", "th.units": "Units", "th.vs": "Usage vs usual", "th.billed": "Billed", "th.tariff": "Tariff says", "th.gap": "Gap", "tag.spike": "spike",
   "i.cliff.t": "Crossed the 500-unit line", "i.cliff.item": "{m} ({o} units over, about {x} extra)",
@@ -58,9 +58,22 @@ let lang = "en";
 const base = new WeakMap();
 
 export const getLang = () => lang;
-export const t = (k, v = {}) => ((lang === "ta" && ta[k]) || en[k] || k).replace(/\{(\w+)\}/g, (_, n) => v[n] ?? "");
+const TA_MONTHS = { Jan: "ஜனவரி", Feb: "பிப்ரவரி", Mar: "மார்ச்", Apr: "ஏப்ரல்", May: "மே", Jun: "ஜூன்", Jul: "ஜூலை", Aug: "ஆகஸ்ட்", Sep: "செப்டம்பர்", Oct: "அக்டோபர்", Nov: "நவம்பர்", Dec: "டிசம்பர்" };
+/** Month abbreviations in a label ("May–Jun 2027") written out in Tamil when Tamil is on; unchanged in English. */
+export const mo = (s) => (lang === "ta" ? String(s).replace(/\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b/g, (m) => TA_MONTHS[m]) : String(s));
+const MONTH_VARS = new Set(["names", "list", "label", "m"]);
+export const t = (k, v = {}) => ((lang === "ta" && ta[k]) || en[k] || k).replace(/\{(\w+)\}/g, (_, n) => (MONTH_VARS.has(n) && v[n] != null ? mo(v[n]) : v[n] ?? ""));
+
+// Tamil counting words before a noun: ஓர் (before a vowel) / இரு / மூன்று ... then the plural noun for 2 or more.
+const TA_COUNT = [null, "ஓர்", "இரு", "மூன்று", "நான்கு", "ஐந்து", "ஆறு", "ஏழு", "எட்டு", "ஒன்பது", "பத்து"];
+/** "1 spike" / "3 spikes" in English; "ஓர் அதிகரிப்பு" / "மூன்று அதிகரிப்புகள்" in Tamil (digits above ten). */
+export const spikeCount = (n) => {
+  if (lang !== "ta") return n === 1 ? "1 spike" : `${n} spikes`;
+  return `${TA_COUNT[n] || n} ${n === 1 ? "அதிகரிப்பு" : "அதிகரிப்புகள்"}`;
+};
 
 export function applyLang() {
+  if (typeof document === "undefined") return; // lets tests run in Node
   document.documentElement.lang = lang;
   document.querySelectorAll("[data-i18n]").forEach((el) => {
     const k = el.dataset.i18n;
@@ -75,7 +88,7 @@ export function setLang(l) {
   lang = l;
   try { localStorage.setItem(KEY, l); } catch {}
   applyLang();
-  document.dispatchEvent(new Event("langchange"));
+  if (typeof document !== "undefined") document.dispatchEvent(new Event("langchange"));
 }
 
 /** Restore the saved language, or ask the visitor to pick one on first visit. */

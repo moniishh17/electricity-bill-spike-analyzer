@@ -6,7 +6,7 @@ import { initLearn } from "./learn.js";
 import { plan } from "./planner.js";
 import { explain } from "./insights.js";
 import { renderChart, renderCurve } from "./chart.js";
-import { t, initLang } from "./i18n.js";
+import { t, mo, spikeCount, initLang } from "./i18n.js";
 import { initTabs, showTab } from "./tabs.js";
 import { yoy, forecast } from "./usage.js";
 
@@ -48,7 +48,7 @@ function renderTable(result) {
   const cols = [t("th.period"), t("th.units"), t("th.vs"), t("th.billed"), t("th.tariff"), t("th.gap"), t("th.yoy")];
   const rows = result.bills.map((b) =>
     h("tr", { className: b.spike ? "spike" : "" },
-      h("td", {}, b.month, ...(b.spike ? [h("span", { className: "tag", textContent: t("tag.spike") })] : []), ...(b.cliff ? [h("span", { className: "tag", textContent: ">500" })] : [])),
+      h("td", {}, mo(b.month), ...(b.spike ? [h("span", { className: "tag", textContent: t("tag.spike") })] : []), ...(b.cliff ? [h("span", { className: "tag", textContent: ">500" })] : [])),
       h("td", { textContent: b.units }),
       h("td", { textContent: `${b.pct >= 0 ? "+" : ""}${Math.round(b.pct)}%` }),
       h("td", { textContent: inr(b.amount) }),
@@ -93,7 +93,7 @@ const SEV = { high: "sev.high", warn: "sev.warn", info: "sev.info", ok: "sev.ok"
 function render(result, kw) {
   const spikes = result.bills.filter((b) => b.spike);
   const names = spikes.map((b) => b.month).join(", ");
-  $("summary").textContent = spikes.length ? t("sum.spikes", { n: spikes.length, names, amt: inr(result.extraCost) }) : t("sum.none");
+  $("summary").textContent = spikes.length ? t("sum.spikes", { c: spikeCount(spikes.length), names, amt: inr(result.extraCost) }) : t("sum.none");
   $("mode").textContent = t(result.perDay ? "mode.day" : "mode.total");
   setMeter(result.extraCost, spikes.length ? t("meter.spikes", { n: spikes.length, names }) : t("meter.none"));
   renderChart($("chart"), result);
@@ -112,7 +112,7 @@ function render(result, kw) {
 
 const list = $("bills");
 const thisYear = new Date().getFullYear();
-const monthOpts = MONTHS.map((t, i) => [i, t]);
+const monthOpts = () => MONTHS.map((m, i) => [i, mo(m)]);
 const yearOpts = Array.from({ length: 8 }, (_, i) => [thisYear - 6 + i, thisYear - 6 + i]);
 const q = (row, k) => row.querySelector(`[data-f="${k}"]`);
 
@@ -150,8 +150,8 @@ function addRow(d = {}) {
   }
   const row = h("div", { className: "bill-row" },
     h("div", { className: "period" },
-      h("label", {}, tr("span", "f.from"), select("fm", monthOpts, p.fromM, "From month"), select("fy", yearOpts, p.fromY, "From year")),
-      h("label", {}, tr("span", "f.to"), select("tm", monthOpts, p.toM, "To month"))),
+      h("label", {}, tr("span", "f.from"), select("fm", monthOpts(), p.fromM, "From month"), select("fy", yearOpts, p.fromY, "From year")),
+      h("label", {}, tr("span", "f.to"), select("tm", monthOpts(), p.toM, "To month"))),
     cell("units", "number", d.units, { placeholder: t("ph.units"), min: 0, step: 1 }),
     cell("amount", "number", d.amount, { placeholder: t("ph.amount"), min: 0, step: 1 }),
     cell("days", "number", d.days, { placeholder: t("ph.days"), min: 1, step: 1, title: "Calculated from the months. Edit to override." }),
@@ -272,6 +272,7 @@ setMeter(0, t("meter.wait"));
 const refreshLearn = initLearn($("kw"));
 refreshLearn();
 document.addEventListener("langchange", () => {
+  list.querySelectorAll('select[data-f="fm"], select[data-f="tm"]').forEach((sel) => [...sel.options].forEach((o, i) => { o.textContent = mo(MONTHS[i]); }));
   if ($("out").hidden) setMeter(0, t("meter.wait")); else run();
   if ($("plan").children.length) runPlanner();
   refreshLearn();
