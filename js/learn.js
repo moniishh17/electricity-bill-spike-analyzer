@@ -8,9 +8,9 @@ const SLOTS = 5; // largest appliances get their own colour; the rest fold into 
 /** Slices for the donut: the biggest SLOTS appliances, everything else summed as Other. */
 export function donutSlices(rows) {
   const sorted = [...rows].sort((a, b) => b.units - a.units);
-  const head = sorted.slice(0, SLOTS).map((r, i) => ({ key: r.key, units: r.units, share: r.share, cls: "s" + i }));
+  const head = sorted.slice(0, SLOTS).map((r, i) => ({ key: r.key, name: r.name, units: r.units, share: r.share, cls: "s" + i }));
   const rest = sorted.slice(SLOTS);
-  if (rest.length) head.push({ key: null, units: rest.reduce((n, r) => n + r.units, 0), share: rest.reduce((n, r) => n + r.share, 0), cls: "so" });
+  if (rest.length) head.push({ key: null, other: true, units: rest.reduce((n, r) => n + r.units, 0), share: rest.reduce((n, r) => n + r.share, 0), cls: "so" });
   return head;
 }
 
@@ -61,7 +61,7 @@ export function initLearn(kwInput) {
   const sel = $("ap");
   function fillSelect() {
     const i = sel.value || 0;
-    sel.replaceChildren(...APPLIANCES.map(([k, w], j) => el("option", { value: j, textContent: `${t(k)} (${w} W)` })));
+    sel.replaceChildren(...APPLIANCES.map(([k, w], j) => el("option", { value: j, textContent: `${t(k)} (${w} W)` })), el("option", { value: "custom", textContent: t("ap.custom") }));
     sel.value = i;
   }
   function renderAppliances(error) {
@@ -69,22 +69,22 @@ export function initLearn(kwInput) {
     if (error) out.push(note("err", error));
     if (!list.length) out.push(note("hint", t("ap.empty")));
     else {
-      const { rows, total, top } = applianceTotals(list.map((e) => ({ ...e, key: APPLIANCES[e.idx][0], watts: APPLIANCES[e.idx][1] })));
+      const { rows, total, top } = applianceTotals(list.map((e) => (e.custom ? { ...e, key: null, name: e.custom.name, watts: e.custom.watts } : { ...e, key: APPLIANCES[e.idx][0], watts: APPLIANCES[e.idx][1] })));
       const body = rows.map((r, i) => {
         const rm = el("button", { className: "ghost del", type: "button", textContent: "×", title: t("ap.remove") });
         rm.setAttribute("aria-label", t("ap.remove"));
         rm.addEventListener("click", () => { list.splice(i, 1); renderAppliances(); });
-        return el("tr", {}, el("td", { textContent: t(r.key) }), el("td", { textContent: r.qty }), el("td", { textContent: r.hours }), el("td", { textContent: Math.round(r.units) }), el("td", {}, rm));
+        return el("tr", {}, el("td", { textContent: r.key ? t(r.key) : r.name }), el("td", { textContent: r.qty }), el("td", { textContent: r.hours }), el("td", { textContent: Math.round(r.units) }), el("td", {}, rm));
       });
       if (rows.length > 1) out.push(viz(rows, total));
       out.push(el("div", { className: "scroll" }, el("table", {}, head(t("ap.col.name"), t("ap.col.qty"), t("ap.col.h"), t("ap.col.u"), ""), ...body)));
       out.push(note("", t("ap.total", { u: Math.round(total), p: Math.round((total / TARIFF.cliff) * 100) })));
-      if (rows.length > 1 && top) out.push(note("", t("ap.top", { n: t(top.key), s: Math.round(top.share * 100) })));
+      if (rows.length > 1 && top) out.push(note("", t("ap.top", { n: top.key ? t(top.key) : top.name, s: Math.round(top.share * 100) })));
     }
     $("ap-out").replaceChildren(...out);
   }
   function viz(rows, total) {
-    const slices = donutSlices(rows).map((x) => ({ ...x, name: x.key ? t(x.key) : t("ap.other") }));
+    const slices = donutSlices(rows).map((x) => ({ ...x, name: x.other ? t("ap.other") : x.key ? t(x.key) : x.name }));
     const kw = Math.max(0.1, parseFloat(kwInput.value) || 1);
     const pct = (total / TARIFF.cliff) * 100;
     const donut = el("div", { className: "donut" });
@@ -109,6 +109,15 @@ export function initLearn(kwInput) {
     const qty = Number($("ap-qty").value), hours = Number($("ap-hours").value);
     if (!Number.isInteger(qty) || qty < 1 || qty > 20) return renderAppliances(t("ap.err.qty"));
     if (!(hours >= 0 && hours <= 24)) return renderAppliances(t("l.err.hours"));
+    if (sel.value === "custom") {
+      const name = $("ap-cname").value.trim(), watts = Number($("ap-cwatts").value);
+      if (!name) return renderAppliances(t("ap.err.cname"));
+      if (!(watts > 0 && watts <= 20000)) return renderAppliances(t("ap.err.cwatts"));
+      list.push({ custom: { name, watts }, qty, hours });
+      $("ap-cname").value = "";
+      $("ap-cwatts").value = "";
+      return renderAppliances();
+    }
     list.push({ idx: Number(sel.value), qty, hours });
     renderAppliances();
   }
@@ -126,7 +135,13 @@ export function initLearn(kwInput) {
     $("ref").replaceChildren(table(TARIFF.within, t("t.t1")), table(TARIFF.above, t("t.t2")));
   }
 
-  sel.addEventListener("change", () => { $("ap-hours").value = APPLIANCES[sel.value][2]; });
+  sel.addEventListener("change", () => {
+    const custom = sel.value === "custom";
+    $("ap-cn").hidden = !custom;
+    $("ap-cw").hidden = !custom;
+    if (custom) $("ap-cname").focus();
+    else $("ap-hours").value = APPLIANCES[sel.value][2];
+  });
   $("ap-add").addEventListener("click", addAppliance);
   $("bd-go").addEventListener("click", renderBreakdown);
   kwInput.addEventListener("change", () => $("bd-units").value && renderBreakdown());

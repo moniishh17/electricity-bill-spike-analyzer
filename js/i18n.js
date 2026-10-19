@@ -5,6 +5,8 @@
 import { ta } from "./lang-ta.js";
 
 export const en = {
+  "ap.ph.name": "Water purifier", "ap.ph.watts": "40",
+  "ap.custom": "Custom (enter my own)", "ap.err.cname": "Enter a name for the appliance.", "ap.err.cwatts": "Enter the watts, between 1 and 20,000. It is printed on the appliance label.",
   "ap.vs": "Your appliances add up to about {a} of the {b} units on your {m} bill, so roughly {d} units are not explained by this list.",
   "ap.vs.over": "Your appliances add up to about {a} units, more than the {b} on your {m} bill. Check the hours and quantities.",
   "ap.other": "Other", "ap.center": "units in 60 days", "ap.limit": "{p}% of the 500-unit line",

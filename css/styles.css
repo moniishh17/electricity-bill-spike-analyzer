@@ -134,6 +134,8 @@ input[type=file] { position: absolute; opacity: 0; width: 1px; height: 1px; }
 .row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 16px; }
 .kw { display: flex; align-items: center; gap: 8px; font-size: 14.5px; color: var(--mute); }
 .kw input { width: 84px; }
+.kw[hidden] { display: none; }
+#ap-cname { width: 170px; }
 .kw select { max-width: 100%; }
 .row .kw:last-child:not(:only-child) { margin-left: auto; }
 
@@ -240,12 +242,6 @@ svg text.donut-n { fill: var(--ink); font-size: 30px; font-weight: 800; letter-s
 .limit.over { background: color-mix(in srgb, var(--spike) 20%, transparent); }
 .limit.over .limit-fill { background: var(--spike); }
 
-#ap-details summary { cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 16px; }
-#ap-details summary::-webkit-details-marker { display: none; }
-#ap-details summary h2 { margin: 0; }
-#ap-details summary::after { content: "+"; color: var(--mute); font-size: 26px; line-height: 1; }
-#ap-details[open] summary::after { content: "–"; }
-#ap-details[open] summary { margin-bottom: 8px; }
 .ap-viz .warn { color: var(--spike); font-weight: 600; }
 
 /* ---- guide and steps ---- */
