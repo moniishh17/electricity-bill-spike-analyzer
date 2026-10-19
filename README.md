@@ -6,11 +6,11 @@
 
 Enter your bi-monthly TNPDCL bills and find out which ones were unusually high, what the tariff says each should have cost, and where your units are going. Available in English and Tamil. It runs entirely in the browser, with no backend, build step or dependencies, and nothing you enter is uploaded.
 
-![Results: summary tiles, usage chart with the spike highlighted, forecast](docs/screenshots/results.png)
+![Results in dark theme: summary tiles, usage chart with the spike highlighted, forecast](docs/screenshots/results.png)
 
-| Appliance breakdown | Tamil, dark theme |
+| Appliance breakdown | Tamil interface |
 |---|---|
-| ![Donut chart of appliance usage checked against a real bill](docs/screenshots/appliances.png) | ![Tamil interface in dark theme](docs/screenshots/tamil-dark.png) |
+| ![Donut chart of appliance usage checked against a real bill](docs/screenshots/appliances.png) | ![Tamil interface](docs/screenshots/tamil.png) |
 
 ## What it does
 - **Finds spikes.** Median and MAD robust statistics flag unusual bills, comparing per day so a 62-day bill is not mistaken for a spike.
