@@ -101,6 +101,8 @@ function render(result, kw) {
   renderCurve($("curve"), result.bills, kw);
   renderTable(result);
   renderKpis(result);
+  const last = result.bills[result.bills.length - 1];
+  refreshLearn.setLatest({ units: last.units, days: last.days, month: last.month });
   $("reasons").replaceChildren(...explain(result).map(([title, d, level]) =>
     h("li", { className: "sev-" + level },
       h("span", { className: "sev", textContent: t(SEV[level]) }),
@@ -232,6 +234,7 @@ $("clear").addEventListener("click", () => {
   list.replaceChildren();
   for (let i = 0; i < 4; i++) addRow();
   $("out").hidden = true;
+  refreshLearn.setLatest(null);
   $("err").textContent = "";
   save();
 });

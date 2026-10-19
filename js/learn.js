@@ -55,6 +55,7 @@ export function initLearn(kwInput) {
     $("bd").replaceChildren(...kids);
   }
 
+  let latest = null; // the newest bill, so the donut can be checked against real units
   // The visitor's appliance list: [{ idx, qty, hours }]. Kept in memory only.
   const list = [];
   const sel = $("ap");
@@ -94,7 +95,13 @@ export function initLearn(kwInput) {
     const level = pct > 100 ? "over" : pct >= 80 ? "near" : "";
     const bar = el("div", { className: "limit " + level, role: "img", "aria-label": t("ap.limit", { p: Math.round(pct) }) },
       el("div", { className: "limit-fill", style: `width:${Math.min(pct, 100)}%` }));
-    return el("div", { className: "ap-viz" }, donut, el("div", {}, legend,
+    let check = [];
+    if (latest) {
+      const mine = Math.round((total * (latest.days || 60)) / 60);
+      const v = { a: mine, b: latest.units, m: latest.month };
+      check = [note(mine > latest.units ? "warn" : "", mine > latest.units ? t("ap.vs.over", v) : t("ap.vs", { ...v, d: latest.units - mine }))];
+    }
+    return el("div", { className: "ap-viz" }, donut, el("div", {}, legend, ...check,
       el("p", { className: "limit-l", textContent: t("ap.limit", { p: Math.round(pct) }) }), bar,
       el("p", { className: "hint", textContent: t("ap.bill", { b: inr(expectedBill(total, kw)) }) })));
   }
@@ -125,5 +132,7 @@ export function initLearn(kwInput) {
   kwInput.addEventListener("change", () => $("bd-units").value && renderBreakdown());
   fillSelect();
   $("ap-hours").value = APPLIANCES[0][2];
-  return () => { fillSelect(); renderReference(); if ($("bd").children.length) renderBreakdown(); renderAppliances(); };
+  const refresh = () => { fillSelect(); renderReference(); if ($("bd").children.length) renderBreakdown(); renderAppliances(); };
+  refresh.setLatest = (bill) => { latest = bill; renderAppliances(); };
+  return refresh;
 }

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BillSpike file check</title>
+<style>body{font:16px/1.6 system-ui,sans-serif;max-width:720px;margin:32px auto;padding:0 16px}li{margin:6px 0}.ok{color:#0a6b3a}.bad{color:#b3261e;font-weight:700}code{background:#0001;padding:1px 5px;border-radius:4px}</style></head>
+<body>
+<h1>BillSpike file check</h1>
+<p>Open this page on your live site (<code>/check.html</code>). It re-downloads every file without the browser cache and checks it is the latest version.</p>
+<ul id="out"></ul>
+<script type="module">
+const checks = [
+  ["index.html", "hero-sample"], ["css/styles.css", ".btn-primary"], ["css/fonts.css", "Archivo"],
+  ["js/main.js", "hero-sample"], ["js/tabs.js", "showTab"], ["js/chart.js", "renderDonut"],
+  ["js/learn.js", "donutSlices"], ["js/i18n.js", "kpi.spikes"], ["js/lang-ta.js", "ap.other"], ["js/insights.js", "\"high\""],
+];
+const out = document.getElementById("out");
+const line = (ok, text) => { const li = document.createElement("li"); li.className = ok ? "ok" : "bad"; li.textContent = (ok ? "OK  " : "PROBLEM  ") + text; out.append(li); };
+for (const [file, marker] of checks) {
+  try {
+    const r = await fetch(file + "?nocache=" + Date.now(), { cache: "reload" });
+    if (!r.ok) { line(false, `${file}: not found (HTTP ${r.status}). Upload it to this exact path.`); continue; }
+    const txt = await r.text();
+    line(txt.includes(marker), txt.includes(marker) ? `${file}: latest version` : `${file}: OLD version. Replace it with the new file.`);
+  } catch (e) { line(false, `${file}: ${e.message}`); }
+}
+for (const m of ["tabs", "chart", "learn", "i18n", "insights"]) {
+  try { await import(`./js/${m}.js?nocache=${Date.now()}`); line(true, `js/${m}.js loads without errors`); }
+  catch (e) { line(false, `js/${m}.js fails to load: ${e.message}`); }
+}
+</script></body></html>

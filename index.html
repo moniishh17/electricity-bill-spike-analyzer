@@ -101,17 +101,19 @@
     <section><h2 data-i18n="r.table.h">Bill by bill</h2><div class="scroll"><table id="table"></table></div></section>
     <section><h2 data-i18n="r.what.h">What to check</h2><ul class="checks" id="reasons"></ul></section>
   </div>
+  <section id="appliances" data-tab="analyze">
+    <details id="ap-details">
+    <summary><h2 data-i18n="ap.h">What do my appliances use?</h2></summary>
+    <p class="hint" data-i18n="ap.hint">Pick an appliance, say how many and for how many hours a day, then add it. Add several to see the combined total. Wattages are typical, so treat the result as an estimate.</p>
+    <div class="row"><label class="kw"><span data-i18n="ap.sel">Appliance</span> <select id="ap"></select></label><label class="kw"><span data-i18n="ap.qty">Quantity</span> <input type="number" id="ap-qty" min="1" max="20" step="1" value="1"></label><label class="kw"><span data-i18n="ap.hours">Hours per day</span> <input type="number" id="ap-hours" min="0" max="24" step="0.5"></label><button id="ap-add" type="button" data-i18n="ap.add">Add</button></div>
+    <div id="ap-out" aria-live="polite"></div>
+    </details>
+  </section>
   <section id="learn" data-tab="learn">
     <h2 data-i18n="c.h">See how a bill is calculated</h2>
     <p class="hint" data-i18n="c.hint">Type the units for a 60-day bill to see the charge slab by slab.</p>
     <div class="row"><label class="kw"><span data-i18n="th.units">Units</span> <input type="number" id="bd-units" min="0" step="1" placeholder="450"></label><button id="bd-go" data-i18n="c.go">Calculate</button></div>
     <div id="bd" aria-live="polite"></div>
-  </section>
-  <section id="appliances" data-tab="learn">
-    <h2 data-i18n="ap.h">What do my appliances use?</h2>
-    <p class="hint" data-i18n="ap.hint">Pick an appliance, say how many and for how many hours a day, then add it. Add several to see the combined total. Wattages are typical, so treat the result as an estimate.</p>
-    <div class="row"><label class="kw"><span data-i18n="ap.sel">Appliance</span> <select id="ap"></select></label><label class="kw"><span data-i18n="ap.qty">Quantity</span> <input type="number" id="ap-qty" min="1" max="20" step="1" value="1"></label><label class="kw"><span data-i18n="ap.hours">Hours per day</span> <input type="number" id="ap-hours" min="0" max="24" step="0.5"></label><button id="ap-add" type="button" data-i18n="ap.add">Add</button></div>
-    <div id="ap-out" aria-live="polite"></div>
   </section>
   <section id="tariff" data-tab="tariff">
     <h2 data-i18n="t.h">Tariff reference</h2>

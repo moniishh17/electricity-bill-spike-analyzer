@@ -5,6 +5,8 @@
 import { ta } from "./lang-ta.js";
 
 export const en = {
+  "ap.vs": "Your appliances add up to about {a} of the {b} units on your {m} bill, so roughly {d} units are not explained by this list.",
+  "ap.vs.over": "Your appliances add up to about {a} units, more than the {b} on your {m} bill. Check the hours and quantities.",
   "ap.other": "Other", "ap.center": "units in 60 days", "ap.limit": "{p}% of the 500-unit line",
   "ap.bill": "Rough bill if these were your only use: {b}. Fixed and fuel charges included.",
   "kpi.spikes": "Spike bills", "kpi.extra": "Extra paid", "kpi.usual": "Usual usage", "kpi.off": "Bills off tariff",
