@@ -46,14 +46,13 @@
   </div>
   <section id="howto" data-tab="learn">
     <h2 data-i18n="hw.h">How to use BillSpike</h2>
-    <p class="hint" data-i18n="hw.lead">Six steps from your paper bill to an answer. Bill layouts can change, so if a label looks different on your bill, look for the same figure under a similar name.</p>
+    <p class="hint" data-i18n="hw.lead">Five steps from your paper bill to an answer. Bill layouts can change, so if a label looks different on your bill, look for the same figure under a similar name.</p>
     <ol class="steps">
       <li><h3 data-i18n="hw.1.t">Gather at least four bills</h3><p data-i18n="hw.1.d">Use your last 4 to 6 bi-monthly bills: paper copies, the SMS or email, or your online account. More bills give a better idea of what is normal. For the year-on-year check, include bills from a year ago too.</p></li>
       <li><h3 data-i18n="hw.2.t">Find the billing period</h3><p data-i18n="hw.2.d">Each bill shows the dates of its two-month period, or the previous and present reading dates. In BillSpike pick the From month and the To month. The days fill in by themselves; change them only if your bill shows a different number.</p></li>
       <li><h3 data-i18n="hw.3.t">Enter the units used</h3><p data-i18n="hw.3.d">Units are the present meter reading minus the previous reading, and are usually printed on the bill as the units consumed. Type that number in the Units box.</p></li>
       <li><h3 data-i18n="hw.4.t">Enter the amount you paid</h3><p data-i18n="hw.4.d">Use the total payable for that bill. If the bill also lists arrears from earlier bills or a late fee, subtract them first, because BillSpike compares only the current charges with the tariff.</p></li>
-      <li><h3 data-i18n="hw.5.t">Set your connected load</h3><p data-i18n="hw.5.d">The connected (sanctioned) load in kW is printed on the bill and sets the small fixed charge. If you cannot find it, leave 1 kW; the fixed charge is small, so the estimate will still be close.</p></li>
-      <li><h3 data-i18n="hw.6.t">Press Analyze bills and read the results</h3><p data-i18n="hw.6.d">Check the red spikes, the gap between Billed and Tariff says, and the forecast. A large gap can mean a wrong reading, arrears or a tariff change. Mid-cycle, use Cliff Guard to stay under 500 units.</p></li>
+      <li><h3 data-i18n="hw.5.t">Press Analyze bills and read the results</h3><p data-i18n="hw.5.d">Check the red spikes, the gap between Billed and Tariff says, and the forecast. A large gap can mean a wrong reading, arrears or a tariff change. Mid-cycle, use Cliff Guard to stay under 500 units.</p></li>
     </ol>
   </section>
   <section id="guide" data-tab="learn">
@@ -62,7 +61,6 @@
     <details><summary data-i18n="q2">Why do bills come every two months?</summary><p data-i18n="a2">TNPDCL reads domestic meters about every two months, so each bill covers roughly 60 days.</p></details>
     <details><summary data-i18n="q3">What are slabs?</summary><p data-i18n="a3">Units are charged in bands. Only the units inside a band pay that band's rate, not the whole bill.</p></details>
     <details><summary data-i18n="q4">What is the 500-unit cliff?</summary><p data-i18n="a4">As publicly reported for the scheme from 10 May 2026: up to 500 units, the first 200 are free. Above 500, only 100 are free and extra units fall in ₹8.40+ slabs, so the bill jumps.</p></details>
-    <details><summary data-i18n="q5">What are the fixed charge and connected load?</summary><p data-i18n="a5">Each bill has a small fixed charge based on your connected load (kW, printed on the bill), plus a fuel surcharge of about ₹0.20 per unit that TNERC revises quarterly.</p></details>
     <details><summary data-i18n="q6">How do I read my bill?</summary><p data-i18n="a6">Present reading minus previous reading is the units used. Check the dates are about 60 days apart and look for arrears from earlier bills.</p></details>
     <details><summary data-i18n="q7">How can I cut units?</summary><p data-i18n="a7">Set the AC to 24–26 °C, switch off standby devices, use LEDs, run the geyser on a timer and use the estimator below to find the big users.</p></details>
   </section>
@@ -77,7 +75,6 @@
       <button class="ghost" id="sample" data-i18n="b.sample">Load sample data</button>
       <button class="ghost" id="export" type="button" data-i18n="b.export">Export CSV</button>
       <button class="ghost" id="clear" type="button" data-i18n="b.clear">Clear</button>
-      <label class="kw"><span data-i18n="kw">Connected load (kW)</span> <input type="number" id="kw" value="1" min="0.1" step="0.5"></label>
     </div>
     <p class="hint" data-i18n="a.hint">One row per bill (at least 4). Pick the From and To months; days fill in automatically and you can edit them.</p>
     <p class="hint"><a href="#howto" data-i18n="a.how">Not sure where to find these figures? See how to use BillSpike.</a></p>
@@ -103,8 +100,8 @@
   </div>
   <section id="appliances" data-tab="analyze">
     <h2 data-i18n="ap.h">What do my appliances use?</h2>
-    <p class="hint" data-i18n="ap.hint">Pick an appliance, say how many and for how many hours a day, then add it. Add several to see the combined total. Wattages are typical, so treat the result as an estimate.</p>
-    <div class="row"><label class="kw"><span data-i18n="ap.sel">Appliance</span> <select id="ap"></select></label><label class="kw" id="ap-cn" hidden><span data-i18n="ap.cname">Appliance name</span> <input type="text" id="ap-cname" maxlength="40" data-i18n-ph="ap.ph.name" placeholder="Water purifier"></label><label class="kw" id="ap-cw" hidden><span data-i18n="ap.cwatts">Watts</span> <input type="number" id="ap-cwatts" min="1" max="20000" step="1" data-i18n-ph="ap.ph.watts" placeholder="40"></label><label class="kw"><span data-i18n="ap.qty">Quantity</span> <input type="number" id="ap-qty" min="1" max="20" step="1" value="1"></label><label class="kw"><span data-i18n="ap.hours">Hours per day</span> <input type="number" id="ap-hours" min="0" max="24" step="0.5"></label><button id="ap-add" type="button" data-i18n="ap.add">Add</button></div>
+    <p class="hint" data-i18n="ap.hint">Pick an appliance, say how many and for how many hours a day, then add it. The watts and hours are typical values that you can change. Add several to see the combined total. Wattages are typical, so treat the result as an estimate.</p>
+    <div class="row"><label class="kw"><span data-i18n="ap.sel">Appliance</span> <select id="ap"></select></label><label class="kw" id="ap-cn" hidden><span data-i18n="ap.cname">Appliance name</span> <input type="text" id="ap-cname" maxlength="40" data-i18n-ph="ap.ph.name" placeholder="Water purifier"></label><label class="kw" id="ap-cw"><span data-i18n="ap.cwatts">Watts</span> <input type="number" id="ap-cwatts" min="1" max="20000" step="1" data-i18n-ph="ap.ph.watts" placeholder="40"></label><label class="kw"><span data-i18n="ap.qty">Quantity</span> <input type="number" id="ap-qty" min="1" max="20" step="1" value="1"></label><label class="kw"><span data-i18n="ap.hours">Hours per day</span> <input type="number" id="ap-hours" min="0" max="24" step="0.5"></label><button id="ap-add" type="button" data-i18n="ap.add">Add</button></div>
     <div id="ap-out" aria-live="polite"></div>
   </section>
   <section id="learn" data-tab="learn">
@@ -115,13 +112,13 @@
   </section>
   <section id="tariff" data-tab="tariff">
     <h2 data-i18n="t.h">Tariff reference</h2>
-    <p class="hint" data-i18n="t.hint">Domestic (LT-IA), per bi-monthly bill. Rates from public reports; effective 10 May 2026.</p>
+    <p class="hint" data-i18n="t.hint">Domestic (LT-IA), per bi-monthly bill. Checked against the official TNPDCL bill calculator on 8 November 2026; effective 10 May 2026.</p>
     <div class="ref" id="ref"></div>
-    <p class="hint" data-i18n="t.fixed">Fixed charge: ₹30 up to 500 W, ₹45 up to 1 kW, +₹30 per extra kW per bill. Fuel surcharge about ₹0.20 per unit.</p>
+    <p class="hint" data-i18n="t.note">No fixed charge for domestic (LT-IA) in the TNERC order, and the official TNPDCL calculator adds no fuel surcharge or electricity duty. Arrears and late fees are not included.</p>
   </section>
   <section id="sources" data-tab="tariff">
     <h2 data-i18n="so.h">Sources and accuracy</h2>
-    <p data-i18n="so.p1">Rates follow TNERC Tariff Order No. 6 of 2024 and the May 2026 free-units scheme, as reported by public calculators and news. They have not been checked against the official order. Last reviewed 4 October 2026.</p>
+    <p data-i18n="so.p1">The current scheme (from 10 May 2026) was checked against the official TNPDCL bill calculator on 8 November 2026 at 100, 350, 500 and 501 units. The earlier scheme (July 2024 to 9 May 2026) was confirmed against a real bill, with the 101-200 slab at ₹2.35. A bill that spans 10 May 2026 is split by days (37 of 60 days at the new scheme), a rule matched to one real bill and not from an official source. Bills before July 2024 are not audited. Last reviewed 8 November 2026.</p>
     <p data-i18n="so.p2">Estimates exclude arrears and late fees. For disputes call the TNPDCL helpline 1912. This is an independent project, not affiliated with TNPDCL.</p>
   </section>
   <footer><p data-i18n="f.p">BillSpike · Open source · runs in your browser</p><p><a href="https://github.com/moniishh17/electricity-bill-spike-analyzer" data-i18n="f.gh">Source code on GitHub</a></p></footer>

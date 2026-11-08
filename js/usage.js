@@ -23,7 +23,7 @@ export function yoy(bills) {
  * Otherwise the average of the last three normal bills: spike bills are left out so one outlier cannot drag it up
  * (unless fewer than three normal bills exist).
  */
-export function forecast(bills, kw = 1, perDay = true) {
+export function forecast(bills, perDay = true) {
   const dated = bills.filter((b) => b.start).sort((a, b) => a.start.localeCompare(b.start));
   if (dated.length < 3) return null;
   const last = dated[dated.length - 1];
@@ -46,7 +46,7 @@ export function forecast(bills, kw = 1, perDay = true) {
     fromM, fromY, toM, days, units, ratio,
     basis: seasonal ? "seasonal" : "recent",
     cliffKnown: applies,
-    bill: applies ? expectedBill(units, kw, tariff) : null,
+    bill: applies ? expectedBill(units, tariff) : null,
     crosses: units > tariff.cliff,
     budget: Number.isFinite(tariff.cliff) ? Math.floor((tariff.cliff / days) * 10) / 10 : null,
   };

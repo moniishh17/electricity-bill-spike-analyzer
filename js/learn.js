@@ -31,7 +31,7 @@ export function applianceTotals(entries, days = 60) {
 }
 
 /** Returns a refresh function to call whenever the language changes. */
-export function initLearn(kwInput) {
+export function initLearn() {
   const $ = (id) => document.getElementById(id);
   const el = (tag, p = {}, ...k) => { const n = Object.assign(document.createElement(tag), p); n.append(...k); return n; };
   const inr = (n) => "₹" + n.toLocaleString("en-IN", { maximumFractionDigits: 2 });
@@ -42,16 +42,13 @@ export function initLearn(kwInput) {
   function renderBreakdown() {
     const units = Number($("bd-units").value);
     if (!Number.isInteger(units) || units < 0) return $("bd").replaceChildren(note("err", t("l.err.units")));
-    const kw = Math.max(0.1, parseFloat(kwInput.value) || 1);
-    const b = breakdown(units, kw);
+    const b = breakdown(units);
     const table = el("table", {},
       head(t("th.units"), t("l.count"), t("l.rate"), t("l.amt")),
       ...b.rows.map((r) => row("", `${r.from}–${r.to}`, r.units, r.rate === 0 ? t("l.free") : r.rate.toFixed(2), inr(r.cost))),
-      row("", t("l.fixed"), "", "", inr(b.fixed)),
-      row("", `${t("l.fuel")} (₹${TARIFF.fsa.toFixed(2)})`, "", "", inr(b.fsa)),
       row("total", t("l.total"), "", "", inr(b.total)));
     const kids = [note("", t("l.intro", { u: units, f: b.freeUnits })), el("div", { className: "scroll" }, table)];
-    if (units >= 400 && units <= TARIFF.cliff) kids.push(note("warn", t("l.warn", { x: inr(expectedBill(TARIFF.cliff + 1, kw) - b.total) })));
+    if (units >= 400 && units <= TARIFF.cliff) kids.push(note("warn", t("l.warn", { x: inr(expectedBill(TARIFF.cliff + 1) - b.total) })));
     $("bd").replaceChildren(...kids);
   }
 
@@ -69,7 +66,7 @@ export function initLearn(kwInput) {
     if (error) out.push(note("err", error));
     if (!list.length) out.push(note("hint", t("ap.empty")));
     else {
-      const { rows, total, top } = applianceTotals(list.map((e) => (e.custom ? { ...e, key: null, name: e.custom.name, watts: e.custom.watts } : { ...e, key: APPLIANCES[e.idx][0], watts: APPLIANCES[e.idx][1] })));
+      const { rows, total, top } = applianceTotals(list.map((e) => (e.custom ? { ...e, key: null, name: e.custom.name, watts: e.custom.watts } : { ...e, key: APPLIANCES[e.idx][0], watts: e.watts ?? APPLIANCES[e.idx][1] })));
       const body = rows.map((r, i) => {
         const rm = el("button", { className: "ghost del", type: "button", textContent: "×", title: t("ap.remove") });
         rm.setAttribute("aria-label", t("ap.remove"));
@@ -85,7 +82,6 @@ export function initLearn(kwInput) {
   }
   function viz(rows, total) {
     const slices = donutSlices(rows).map((x) => ({ ...x, name: x.other ? t("ap.other") : x.key ? t(x.key) : x.name }));
-    const kw = Math.max(0.1, parseFloat(kwInput.value) || 1);
     const pct = (total / TARIFF.cliff) * 100;
     const donut = el("div", { className: "donut" });
     renderDonut(donut, slices, { total, label: t("ap.total", { u: Math.round(total), p: Math.round(pct) }) });
@@ -103,14 +99,15 @@ export function initLearn(kwInput) {
     }
     return el("div", { className: "ap-viz" }, donut, el("div", {}, legend, ...check,
       el("p", { className: "limit-l", textContent: t("ap.limit", { p: Math.round(pct) }) }), bar,
-      el("p", { className: "hint", textContent: t("ap.bill", { b: inr(expectedBill(total, kw)) }) })));
+      el("p", { className: "hint", textContent: t("ap.bill", { b: inr(expectedBill(total)) }) })));
   }
   function addAppliance() {
     const qty = Number($("ap-qty").value), hours = Number($("ap-hours").value);
     if (!Number.isInteger(qty) || qty < 1 || qty > 20) return renderAppliances(t("ap.err.qty"));
     if (!(hours >= 0 && hours <= 24)) return renderAppliances(t("l.err.hours"));
+    const watts = Number($("ap-cwatts").value);
     if (sel.value === "custom") {
-      const name = $("ap-cname").value.trim(), watts = Number($("ap-cwatts").value);
+      const name = $("ap-cname").value.trim();
       if (!name) return renderAppliances(t("ap.err.cname"));
       if (!(watts > 0 && watts <= 20000)) return renderAppliances(t("ap.err.cwatts"));
       list.push({ custom: { name, watts }, qty, hours });
@@ -118,7 +115,8 @@ export function initLearn(kwInput) {
       $("ap-cwatts").value = "";
       return renderAppliances();
     }
-    list.push({ idx: Number(sel.value), qty, hours });
+    if (!(watts > 0 && watts <= 20000)) return renderAppliances(t("ap.err.cwatts"));
+    list.push({ idx: Number(sel.value), watts, qty, hours }); // watts starts at the typical value but the visitor can change it
     renderAppliances();
   }
 
@@ -138,15 +136,14 @@ export function initLearn(kwInput) {
   sel.addEventListener("change", () => {
     const custom = sel.value === "custom";
     $("ap-cn").hidden = !custom;
-    $("ap-cw").hidden = !custom;
-    if (custom) $("ap-cname").focus();
-    else $("ap-hours").value = APPLIANCES[sel.value][2];
+    if (custom) { $("ap-cwatts").value = ""; $("ap-cname").focus(); }
+    else { $("ap-cwatts").value = APPLIANCES[sel.value][1]; $("ap-hours").value = APPLIANCES[sel.value][2]; }
   });
   $("ap-add").addEventListener("click", addAppliance);
   $("bd-go").addEventListener("click", renderBreakdown);
-  kwInput.addEventListener("change", () => $("bd-units").value && renderBreakdown());
   fillSelect();
   $("ap-hours").value = APPLIANCES[0][2];
+  $("ap-cwatts").value = APPLIANCES[0][1];
   const refresh = () => { fillSelect(); renderReference(); if ($("bd").children.length) renderBreakdown(); renderAppliances(); };
   refresh.setLatest = (bill) => { latest = bill; renderAppliances(); };
   return refresh;

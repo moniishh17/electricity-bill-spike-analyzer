@@ -2,31 +2,30 @@
  * Tamil Nadu domestic (LT-IA) tariffs, bi-monthly billing, kept as a dated list.
  * Each bill is matched to the tariff in force when its period began. Add an entry to support another period.
  * Each slab is [upper bound in units, rupees per unit]; slabs are telescopic.
- * fsa is an indicative fuel surcharge in rupees per unit (TNERC revises it quarterly).
+ * The official TNPDCL bill calculator charges energy only for domestic consumers: no fixed charge, no fuel
+ * surcharge and no electricity duty, so none are modelled. Arrears and late fees are not included either.
  */
-const LADDER = [[100, 0], [400, 4.7], [500, 6.3], [600, 8.4], [800, 9.45], [1000, 10.5], [Infinity, 11.55]];
-const FIXED = { upTo500W: 30, upTo1kW: 45, perExtraKW: 30 }; // rupees per bi-month
+// Above 500 units on the 2026 scheme: 100 free, then ₹4.70 up to 400 (the 101-200 concession is lost).
+const ABOVE_500 = [[100, 0], [400, 4.7], [500, 6.3], [600, 8.4], [800, 9.45], [1000, 10.5], [Infinity, 11.55]];
+// The earlier scheme: 100 free, then ₹2.35 for 101-200.
+const EARLIER = [[100, 0], [200, 2.35], [400, 4.7], [500, 6.3], [600, 8.4], [800, 9.45], [1000, 10.5], [Infinity, 11.55]];
 
 export const TARIFFS = [
   {
     effective: "2026-05-10",
     name: "TNPDCL LT-IA Domestic (200 free units at or below 500)",
-    source: "Publicly reported figures (electricbillcalculate.in, Verified.RealEstate). Confirm against the TNERC/TNPDCL order.",
+    source: "Checked against the official TNPDCL bill calculator on 8 November 2026 (100, 350, 500 and 501 units).",
     cliff: 500, // above this many units the free allowance drops from 200 to 100
-    fsa: 0.2,
     within: [[200, 0], [400, 4.7], [500, 6.3]],
-    above: LADDER,
-    fixed: FIXED,
+    above: ABOVE_500,
   },
   {
     effective: "2024-07-01",
     name: "TNERC Tariff Order No. 6 of 2024 (100 free units)",
-    source: "Publicly reported figures (electricbillcalculate.in). Confirm against the TNERC order.",
+    source: "Rates confirmed against a real bill (rows from August 2024 to April 2025). The official calculator shows the current scheme only.",
     cliff: Infinity, // one ladder for every bill, so no cliff
-    fsa: 0.2,
-    within: LADDER,
-    above: LADDER,
-    fixed: FIXED,
+    within: EARLIER,
+    above: EARLIER,
   },
 ].sort((a, b) => b.effective.localeCompare(a.effective)); // newest first
 
@@ -45,12 +44,22 @@ export function tariffFor(startISO, endISO) {
   return { tariff: t, applies: true };
 }
 
-export const fixedCharge = (kw = 1, t = TARIFF) =>
-  kw <= 0.5 ? t.fixed.upTo500W
-    : kw <= 1 ? t.fixed.upTo1kW
-    : t.fixed.upTo1kW + Math.ceil(kw - 1) * t.fixed.perExtraKW;
+const DAY = 86400000;
+const daysBetween = (a, b) => Math.round((Date.parse(b) - Date.parse(a)) / DAY);
 
-export const fuelCharge = (units, t = TARIFF) => Math.round(units * t.fsa * 100) / 100;
+/**
+ * Expected amount for one bill, or null when it cannot be checked. A period that spans a tariff change is split by days:
+ * the days from the change date to the end of the period (inclusive) use the new tariff, the rest of a 60-day cycle the
+ * old one. This rule matches one real bill exactly (405 units, 15 Apr to 15 Jun 2026 gave Rs 1061.58) and is not from an official source.
+ */
+export function auditedBill(units, startISO, endISO) {
+  const r = tariffFor(startISO, endISO);
+  if (r.applies) return expectedBill(units, r.tariff);
+  if (r.reason !== "spans") return null;
+  const next = TARIFFS.find((x) => endISO >= x.effective);
+  const nd = Math.min(60, Math.max(0, daysBetween(next.effective, endISO) + 1));
+  return Math.round((energyCharge(units, r.tariff) * (60 - nd) + energyCharge(units, next) * nd) / 60);
+}
 
 export function energyCharge(units, t = TARIFF) {
   const slabs = units <= t.cliff ? t.within : t.above;
@@ -63,17 +72,17 @@ export function energyCharge(units, t = TARIFF) {
   return total;
 }
 
-/** Energy + fixed + fuel surcharge. Domestic bills carry no electricity duty. Arrears and late fees are excluded. */
-export const expectedBill = (units, kw = 1, t = TARIFF) => energyCharge(units, t) + fixedCharge(kw, t) + fuelCharge(units, t);
+/** The amount the official calculator shows: energy charge rounded to the rupee. Arrears and late fees are excluded. */
+export const expectedBill = (units, t = TARIFF) => Math.round(energyCharge(units, t));
 
 /** Extra cost of being over the cliff compared with using exactly the cliff number of units. */
-export function cliffReport(units, kw = 1, t = TARIFF) {
+export function cliffReport(units, t = TARIFF) {
   if (units <= t.cliff) return null;
-  return { over: units - t.cliff, extra: expectedBill(units, kw, t) - expectedBill(t.cliff, kw, t) };
+  return { over: units - t.cliff, extra: expectedBill(units, t) - expectedBill(t.cliff, t) };
 }
 
 /** Slab-by-slab calculation, for showing how a bill is built. */
-export function breakdown(units, kw = 1, t = TARIFF) {
+export function breakdown(units, t = TARIFF) {
   const slabs = units <= t.cliff ? t.within : t.above;
   const rows = [];
   let prev = 0;
@@ -83,5 +92,5 @@ export function breakdown(units, kw = 1, t = TARIFF) {
     rows.push({ from: prev + 1, to: Math.min(units, upper), units: n, rate, cost: n * rate });
     prev = upper;
   }
-  return { rows, freeUnits: slabs[0][0], fixed: fixedCharge(kw, t), fsa: fuelCharge(units, t), total: expectedBill(units, kw, t), atOrBelowCliff: units <= t.cliff };
+  return { rows, freeUnits: slabs[0][0], total: expectedBill(units, t), atOrBelowCliff: units <= t.cliff };
 }

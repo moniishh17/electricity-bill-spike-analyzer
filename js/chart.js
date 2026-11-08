@@ -126,10 +126,10 @@ export function renderChart(host, { bills, baseline, unit }) {
 }
 
 /** Expected bill against units, with the 500-unit cliff and the user's own bills plotted. */
-export function renderCurve(host, bills, kw) {
+export function renderCurve(host, bills) {
   const W = 760, H = 300, p = { l: 62, r: 16, t: 26, b: 38 };
   const maxU = Math.max(800, ...bills.map((b) => b.units)) * 1.05;
-  const { ticks, top } = niceTicks(Math.max(expectedBill(maxU, kw), ...bills.map((b) => b.amount)) * 1.05);
+  const { ticks, top } = niceTicks(Math.max(expectedBill(maxU), ...bills.map((b) => b.amount)) * 1.05);
   const x = (u) => p.l + ((W - p.l - p.r) * u) / maxU;
   const y = (v) => p.t + (H - p.t - p.b) * (1 - v / top);
   const svg = root(W, H, "Expected bill against units used, with your bills plotted");
@@ -138,8 +138,8 @@ export function renderCurve(host, bills, kw) {
   grid(svg, p, W, ticks, y, (v) => "₹" + compact(v));
   const seg = (from, to) => {
     const pts = [];
-    for (let u = from; u < to; u += 5) pts.push(`${x(u)},${y(expectedBill(u, kw))}`);
-    pts.push(`${x(to)},${y(expectedBill(to, kw))}`);
+    for (let u = from; u < to; u += 5) pts.push(`${x(u)},${y(expectedBill(u))}`);
+    pts.push(`${x(to)},${y(expectedBill(to))}`);
     return svgEl("polyline", { points: pts.join(" "), class: "curve" });
   };
   svg.append(seg(0, TARIFF.cliff), seg(TARIFF.cliff + 1, maxU));

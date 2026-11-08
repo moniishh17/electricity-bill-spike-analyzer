@@ -1,7 +1,7 @@
 import { MONTHS, resolveTo, periodDays, periodLabel, parsePeriodLabel, periodDates } from "./period.js";
 import { parseCSV, validateRows } from "./parser.js";
 import { analyze } from "./analysis.js";
-import { expectedBill, cliffReport, tariffFor } from "./tariff.js";
+import { expectedBill, cliffReport, tariffFor, auditedBill } from "./tariff.js";
 import { initLearn } from "./learn.js";
 import { plan } from "./planner.js";
 import { explain } from "./insights.js";
@@ -33,12 +33,13 @@ function setMeter(value, sub) {
 }
 
 /** Add tariff-based fields: expected amount, billing gap, and 500-unit cliff cost. */
-function enrich(result, kw) {
+function enrich(result) {
   result.bills = result.bills.map((b) => {
     const { tariff, applies } = tariffFor(b.start, b.end);
-    if (!applies) return { ...b, expected: null, gap: null, cliff: null, audit: false, unchecked: true };
-    const expected = expectedBill(b.units, kw, tariff), gap = b.amount - expected;
-    return { ...b, expected, gap, cliff: cliffReport(b.units, kw, tariff), audit: Math.abs(gap) > Math.max(100, expected * 0.15) };
+    const expected = applies ? expectedBill(b.units, tariff) : auditedBill(b.units, b.start, b.end);
+    if (expected == null) return { ...b, expected: null, gap: null, cliff: null, audit: false, unchecked: true };
+    const gap = b.amount - expected;
+    return { ...b, expected, gap, cliff: applies ? cliffReport(b.units, tariff) : null, audit: Math.abs(gap) > Math.max(100, expected * 0.15) };
   });
   result.bills = yoy(result.bills);
   return result;
@@ -58,8 +59,8 @@ function renderTable(result) {
   $("table").replaceChildren(h("tr", {}, ...cols.map((c) => h("th", { textContent: c }))), ...rows);
 }
 
-function renderForecast(result, kw) {
-  const f = forecast(result.bills, kw, result.perDay);
+function renderForecast(result) {
+  const f = forecast(result.bills, result.perDay);
   const box = $("fc-out");
   if (!f) return box.replaceChildren(h("p", { className: "hint", textContent: t("fc.need") }));
   const label = periodLabel(f.fromM, f.fromY, f.toM);
@@ -90,15 +91,15 @@ function renderKpis(result) {
 
 const SEV = { high: "sev.high", warn: "sev.warn", info: "sev.info", ok: "sev.ok" };
 
-function render(result, kw) {
+function render(result) {
   const spikes = result.bills.filter((b) => b.spike);
   const names = spikes.map((b) => b.month).join(", ");
   $("summary").textContent = spikes.length ? t("sum.spikes", { c: spikeCount(spikes.length), names, amt: inr(result.extraCost) }) : t("sum.none");
   $("mode").textContent = t(result.perDay ? "mode.day" : "mode.total");
   setMeter(result.extraCost, spikes.length ? t("meter.spikes", { n: spikes.length, names }) : t("meter.none"));
   renderChart($("chart"), result);
-  renderForecast(result, kw);
-  renderCurve($("curve"), result.bills, kw);
+  renderForecast(result);
+  renderCurve($("curve"), result.bills);
   renderTable(result);
   renderKpis(result);
   const last = result.bills[result.bills.length - 1];
@@ -184,12 +185,11 @@ const readRows = () => [...list.children].map((r) => {
 // Persistence: keep the form in localStorage so a refresh does not wipe it.
 const KEY = "billspike:v1";
 const rowState = (r) => ({ ...rowPeriod(r), label: r.dataset.label || null, units: q(r, "units").value, amount: q(r, "amount").value, days: q(r, "days").value });
-const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ kw: $("kw").value, rows: [...list.children].map(rowState) })); } catch {} };
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ rows: [...list.children].map(rowState) })); } catch {} };
 function restore() {
   try {
     const s = JSON.parse(localStorage.getItem(KEY));
     if (!s?.rows?.length) return false;
-    $("kw").value = s.kw || 1;
     s.rows.forEach((r) => addRow({ period: { fromM: r.fromM, fromY: r.fromY, toM: r.toM }, label: r.label, units: r.units, amount: r.amount, days: r.days === "" ? null : r.days }));
     return true;
   } catch { return false; }
@@ -198,11 +198,10 @@ list.addEventListener("input", save);
 list.addEventListener("change", save);
 
 function run(scroll = false) {
-  const kw = Math.max(0.1, parseFloat($("kw").value) || 1);
   const { rows, errors } = validateRows(readRows());
   $("err").textContent = errors.join(" ");
   try {
-    render(enrich(analyze(rows), kw), kw);
+    render(enrich(analyze(rows)));
     if (scroll) $("out").scrollIntoView({ behavior: "smooth", block: "start" });
   } catch (e) {
     $("out").hidden = true;
@@ -212,10 +211,9 @@ function run(scroll = false) {
 }
 
 function runPlanner() {
-  const kw = Math.max(0.1, parseFloat($("kw").value) || 1);
   const box = $("plan");
   try {
-    const p = plan({ used: Number($("used").value), elapsed: Number($("elapsed").value), kw });
+    const p = plan({ used: Number($("used").value), elapsed: Number($("elapsed").value) });
     const lines = [t("p.track", { r: p.rate.toFixed(1), p: p.projected, b: inr(p.bill) })];
     if (p.alreadyOver) lines.push(t("p.over"));
     else if (p.crosses) lines.push(t("p.cross", { x: inr(p.extra), d: p.left, u: p.budget.toFixed(1), c: p.cutPerDay.toFixed(1) }));
@@ -228,7 +226,6 @@ function runPlanner() {
 
 $("plan-go").addEventListener("click", runPlanner);
 $("go").addEventListener("click", () => run(true));
-$("kw").addEventListener("change", () => { save(); validateRows(readRows()).rows.length >= 4 && run(); });
 $("add").addEventListener("click", () => { addRow(); list.lastChild.querySelector("input").focus(); save(); });
 $("clear").addEventListener("click", () => {
   list.replaceChildren();
@@ -269,7 +266,7 @@ buildDrums();
 initTabs();
 initLang();
 setMeter(0, t("meter.wait"));
-const refreshLearn = initLearn($("kw"));
+const refreshLearn = initLearn();
 refreshLearn();
 document.addEventListener("langchange", () => {
   list.querySelectorAll('select[data-f="fm"], select[data-f="tm"]').forEach((sel) => [...sel.options].forEach((o, i) => { o.textContent = mo(MONTHS[i]); }));
