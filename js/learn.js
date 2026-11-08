@@ -73,7 +73,7 @@ export function initLearn() {
         rm.addEventListener("click", () => { list.splice(i, 1); renderAppliances(); });
         return el("tr", {}, el("td", { textContent: r.key ? t(r.key) : r.name }), el("td", { textContent: r.qty }), el("td", { textContent: r.hours }), el("td", { textContent: Math.round(r.units) }), el("td", {}, rm));
       });
-      if (rows.length > 1) out.push(viz(rows, total));
+      out.push(viz(rows, total));
       out.push(el("div", { className: "scroll" }, el("table", {}, head(t("ap.col.name"), t("ap.col.qty"), t("ap.col.h"), t("ap.col.u"), ""), ...body)));
       out.push(note("", t("ap.total", { u: Math.round(total), p: Math.round((total / TARIFF.cliff) * 100) })));
       if (rows.length > 1 && top) out.push(note("", t("ap.top", { n: top.key ? t(top.key) : top.name, s: Math.round(top.share * 100) })));
