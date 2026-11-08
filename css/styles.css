@@ -78,7 +78,7 @@ code { font-family: "DM Mono", ui-monospace, monospace; font-size: .9em; }
   border-bottom: 1px solid var(--line);
 }
 .brand { display: flex; align-items: center; gap: 9px; font-size: 18px; font-weight: 800; letter-spacing: -.01em; color: var(--ink); text-decoration: none; padding: 14px 0; }
-.brand-mark { width: 12px; height: 12px; border-radius: 3px; background: var(--digit); box-shadow: 0 0 0 2px var(--case); }
+.brand-mark { width: 22px; height: 22px; flex: none; background: url(../favicon.svg) center / contain no-repeat; }
 .tab-off { display: none !important; }
 .tabs { display: flex; gap: 4px; margin: 0 auto 0 8px; align-self: stretch; overflow-x: auto; scrollbar-width: none; }
 .tabs::-webkit-scrollbar { display: none; }
