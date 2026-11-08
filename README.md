@@ -6,7 +6,9 @@
 
 Enter your bi-monthly TNPDCL bills and find out which ones were unusually high, what the tariff says each should have cost, and where your units are going. Available in English and Tamil. It runs entirely in the browser, with no backend, build step or dependencies, and nothing you enter is uploaded.
 
-![Results in dark theme: summary tiles, usage chart with the spike highlighted, forecast](docs/screenshots/results.png)
+| Summary, forecast and tariff curve | Bill by bill and what to check |
+|---|---|
+| ![Dark theme results, part 1: summary tiles, usage chart with the spike highlighted, forecast and bills against the tariff](docs/screenshots/results-1.png) | ![Dark theme results, part 2: bill-by-bill table and what to check](docs/screenshots/results-2.png) |
 
 | Appliance breakdown | Tamil interface |
 |---|---|
