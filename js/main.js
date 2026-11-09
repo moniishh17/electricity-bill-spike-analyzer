@@ -251,6 +251,14 @@ async function loadSample() {
 }
 $("sample").addEventListener("click", loadSample);
 $("hero-sample").addEventListener("click", loadSample);
+// links such as "Open the appliance analyzer" that live on another tab
+document.querySelectorAll("[data-goto]").forEach((a) => a.addEventListener("click", (e) => {
+  e.preventDefault();
+  showTab("analyze");
+  const target = $(a.dataset.goto);
+  target.scrollIntoView({ behavior: "smooth", block: "start" });
+  $("ap")?.focus({ preventScroll: true });
+}));
 $("file").addEventListener("change", async (e) => {
   const f = e.target.files[0];
   if (!f) return;

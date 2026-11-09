@@ -308,3 +308,5 @@ dialog button.lang-btn { background: var(--volt); border-color: var(--volt); col
   html { scroll-behavior: auto; }
   .strip { transition: none; }
 }
+
+#guide .faq-link { color: var(--volt); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
